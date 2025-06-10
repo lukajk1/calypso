@@ -48,10 +48,11 @@
             item1ToolStripMenuItem = new ToolStripMenuItem();
             item2ToolStripMenuItem = new ToolStripMenuItem();
             tagTree = new TreeView();
+            panel1 = new Panel();
             menuStrip1.SuspendLayout();
-            flowLayoutPanel1.SuspendLayout();
             statusStrip1.SuspendLayout();
             imageContextMenuStrip.SuspendLayout();
+            panel1.SuspendLayout();
             SuspendLayout();
             // 
             // menuStrip1
@@ -96,17 +97,16 @@
             flowLayoutPanel1.AutoScroll = true;
             flowLayoutPanel1.AutoSize = true;
             flowLayoutPanel1.BackColor = SystemColors.ControlLight;
-            flowLayoutPanel1.Controls.Add(textBox1);
             flowLayoutPanel1.Dock = DockStyle.Fill;
-            flowLayoutPanel1.Location = new Point(168, 24);
+            flowLayoutPanel1.Location = new Point(168, 77);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
             flowLayoutPanel1.Padding = new Padding(12, 12, 12, 45);
-            flowLayoutPanel1.Size = new Size(580, 495);
+            flowLayoutPanel1.Size = new Size(580, 442);
             flowLayoutPanel1.TabIndex = 7;
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(15, 15);
+            textBox1.Location = new Point(6, 14);
             textBox1.Name = "textBox1";
             textBox1.Size = new Size(389, 23);
             textBox1.TabIndex = 11;
@@ -115,9 +115,9 @@
             // statusStrip1
             // 
             statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripProgressBar1, toolStripStatusLabelImageCount });
-            statusStrip1.Location = new Point(0, 519);
+            statusStrip1.Location = new Point(168, 519);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(748, 22);
+            statusStrip1.Size = new Size(580, 22);
             statusStrip1.TabIndex = 9;
             statusStrip1.Text = "statusStrip1";
             // 
@@ -193,8 +193,18 @@
             tagTree.Dock = DockStyle.Left;
             tagTree.Location = new Point(0, 24);
             tagTree.Name = "tagTree";
-            tagTree.Size = new Size(168, 495);
+            tagTree.Size = new Size(168, 517);
             tagTree.TabIndex = 10;
+            // 
+            // panel1
+            // 
+            panel1.BackColor = SystemColors.ActiveBorder;
+            panel1.Controls.Add(textBox1);
+            panel1.Dock = DockStyle.Top;
+            panel1.Location = new Point(168, 24);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(580, 53);
+            panel1.TabIndex = 12;
             // 
             // Form1
             // 
@@ -202,20 +212,21 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(748, 541);
             Controls.Add(flowLayoutPanel1);
+            Controls.Add(statusStrip1);
+            Controls.Add(panel1);
             Controls.Add(tagTree);
             Controls.Add(menuStrip1);
-            Controls.Add(statusStrip1);
             MainMenuStrip = menuStrip1;
             MinimumSize = new Size(450, 450);
             Name = "Form1";
             Text = "Calypso Image Manager";
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
-            flowLayoutPanel1.ResumeLayout(false);
-            flowLayoutPanel1.PerformLayout();
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             imageContextMenuStrip.ResumeLayout(false);
+            panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -240,5 +251,6 @@
         private TreeView tagTree;
         public ToolStripProgressBar toolStripProgressBar1;
         private TextBox textBox1;
+        private Panel panel1;
     }
 }
