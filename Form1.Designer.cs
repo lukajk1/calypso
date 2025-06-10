@@ -28,22 +28,30 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             menuStrip1 = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
             exitToolStripMenuItem = new ToolStripMenuItem();
             testToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             flowLayoutPanel1 = new FlowLayoutPanel();
-            labelThumbnailHeight = new Label();
+            textBox1 = new TextBox();
             statusStrip1 = new StatusStrip();
-            btnEnlargeThumb = new Button();
-            btnShrinkThumb = new Button();
+            toolStripProgressBar1 = new ToolStripProgressBar();
+            toolStripStatusLabelImageCount = new ToolStripStatusLabel();
             BottomToolStripPanel = new ToolStripPanel();
             TopToolStripPanel = new ToolStripPanel();
             RightToolStripPanel = new ToolStripPanel();
             LeftToolStripPanel = new ToolStripPanel();
             ContentPanel = new ToolStripContentPanel();
+            imageContextMenuStrip = new ContextMenuStrip(components);
+            item1ToolStripMenuItem = new ToolStripMenuItem();
+            item2ToolStripMenuItem = new ToolStripMenuItem();
+            tagTree = new TreeView();
             menuStrip1.SuspendLayout();
+            flowLayoutPanel1.SuspendLayout();
+            statusStrip1.SuspendLayout();
+            imageContextMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
             // menuStrip1
@@ -51,7 +59,7 @@
             menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, testToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(747, 24);
+            menuStrip1.Size = new Size(748, 24);
             menuStrip1.TabIndex = 6;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -86,45 +94,45 @@
             // flowLayoutPanel1
             // 
             flowLayoutPanel1.AutoScroll = true;
-            flowLayoutPanel1.Location = new Point(0, 27);
+            flowLayoutPanel1.AutoSize = true;
+            flowLayoutPanel1.BackColor = SystemColors.ControlLight;
+            flowLayoutPanel1.Controls.Add(textBox1);
+            flowLayoutPanel1.Dock = DockStyle.Fill;
+            flowLayoutPanel1.Location = new Point(168, 24);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
-            flowLayoutPanel1.Size = new Size(747, 452);
+            flowLayoutPanel1.Padding = new Padding(12, 12, 12, 45);
+            flowLayoutPanel1.Size = new Size(580, 495);
             flowLayoutPanel1.TabIndex = 7;
             // 
-            // labelThumbnailHeight
+            // textBox1
             // 
-            labelThumbnailHeight.AutoSize = true;
-            labelThumbnailHeight.Location = new Point(26, 530);
-            labelThumbnailHeight.Name = "labelThumbnailHeight";
-            labelThumbnailHeight.Size = new Size(134, 15);
-            labelThumbnailHeight.TabIndex = 8;
-            labelThumbnailHeight.Text = "Thumbnail Height: 00px";
+            textBox1.Location = new Point(15, 15);
+            textBox1.Name = "textBox1";
+            textBox1.Size = new Size(389, 23);
+            textBox1.TabIndex = 11;
+            textBox1.KeyDown += textBox1_KeyDown;
             // 
             // statusStrip1
             // 
-            statusStrip1.Location = new Point(0, 605);
+            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripProgressBar1, toolStripStatusLabelImageCount });
+            statusStrip1.Location = new Point(0, 519);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(747, 22);
+            statusStrip1.Size = new Size(748, 22);
             statusStrip1.TabIndex = 9;
             statusStrip1.Text = "statusStrip1";
             // 
-            // btnEnlargeThumb
+            // toolStripProgressBar1
             // 
-            btnEnlargeThumb.Location = new Point(84, 579);
-            btnEnlargeThumb.Name = "btnEnlargeThumb";
-            btnEnlargeThumb.Size = new Size(52, 23);
-            btnEnlargeThumb.TabIndex = 10;
-            btnEnlargeThumb.Text = "+";
-            btnEnlargeThumb.UseVisualStyleBackColor = true;
+            toolStripProgressBar1.Name = "toolStripProgressBar1";
+            toolStripProgressBar1.Size = new Size(100, 16);
             // 
-            // btnShrinkThumb
+            // toolStripStatusLabelImageCount
             // 
-            btnShrinkThumb.Location = new Point(26, 579);
-            btnShrinkThumb.Name = "btnShrinkThumb";
-            btnShrinkThumb.Size = new Size(52, 23);
-            btnShrinkThumb.TabIndex = 11;
-            btnShrinkThumb.Text = "-";
-            btnShrinkThumb.UseVisualStyleBackColor = true;
+            toolStripStatusLabelImageCount.Name = "toolStripStatusLabelImageCount";
+            toolStripStatusLabelImageCount.Padding = new Padding(15, 0, 0, 0);
+            toolStripStatusLabelImageCount.Size = new Size(109, 17);
+            toolStripStatusLabelImageCount.Text = "Image Count: 00";
+            toolStripStatusLabelImageCount.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // BottomToolStripPanel
             // 
@@ -162,24 +170,52 @@
             // 
             ContentPanel.Size = new Size(312, 292);
             // 
+            // imageContextMenuStrip
+            // 
+            imageContextMenuStrip.Items.AddRange(new ToolStripItem[] { item1ToolStripMenuItem, item2ToolStripMenuItem });
+            imageContextMenuStrip.Name = "contextMenuStrip1";
+            imageContextMenuStrip.Size = new Size(105, 48);
+            // 
+            // item1ToolStripMenuItem
+            // 
+            item1ToolStripMenuItem.Name = "item1ToolStripMenuItem";
+            item1ToolStripMenuItem.Size = new Size(104, 22);
+            item1ToolStripMenuItem.Text = "item1";
+            // 
+            // item2ToolStripMenuItem
+            // 
+            item2ToolStripMenuItem.Name = "item2ToolStripMenuItem";
+            item2ToolStripMenuItem.Size = new Size(104, 22);
+            item2ToolStripMenuItem.Text = "item2";
+            // 
+            // tagTree
+            // 
+            tagTree.Dock = DockStyle.Left;
+            tagTree.Location = new Point(0, 24);
+            tagTree.Name = "tagTree";
+            tagTree.Size = new Size(168, 495);
+            tagTree.TabIndex = 10;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(747, 627);
-            Controls.Add(btnShrinkThumb);
-            Controls.Add(btnEnlargeThumb);
-            Controls.Add(statusStrip1);
-            Controls.Add(labelThumbnailHeight);
+            ClientSize = new Size(748, 541);
             Controls.Add(flowLayoutPanel1);
+            Controls.Add(tagTree);
             Controls.Add(menuStrip1);
+            Controls.Add(statusStrip1);
             MainMenuStrip = menuStrip1;
             MinimumSize = new Size(450, 450);
             Name = "Form1";
-            Text = "Calypso";
-            Resize += Form1_Resize;
+            Text = "Calypso Image Manager";
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
+            flowLayoutPanel1.ResumeLayout(false);
+            flowLayoutPanel1.PerformLayout();
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
+            imageContextMenuStrip.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -191,14 +227,18 @@
         private ToolStripMenuItem fileToolStripMenuItem;
         private ToolStripMenuItem exitToolStripMenuItem;
         private FlowLayoutPanel flowLayoutPanel1;
-        private Label labelThumbnailHeight;
         private StatusStrip statusStrip1;
-        private Button btnEnlargeThumb;
-        private Button btnShrinkThumb;
         private ToolStripPanel BottomToolStripPanel;
         private ToolStripPanel TopToolStripPanel;
         private ToolStripPanel RightToolStripPanel;
         private ToolStripPanel LeftToolStripPanel;
         private ToolStripContentPanel ContentPanel;
+        public ToolStripStatusLabel toolStripStatusLabelImageCount;
+        private ContextMenuStrip imageContextMenuStrip;
+        private ToolStripMenuItem item1ToolStripMenuItem;
+        private ToolStripMenuItem item2ToolStripMenuItem;
+        private TreeView tagTree;
+        public ToolStripProgressBar toolStripProgressBar1;
+        private TextBox textBox1;
     }
 }
