@@ -117,7 +117,9 @@ namespace Calypso
         }
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Calypso Image Manager v0.1a\nCreated by lukajk");
+            string message = "Calypso Image Manager v1.0.0\nSupported file types: .jpg, .jpeg, .png, .bmp, .gif\nCreated by lukajk";
+            string title = "About";
+            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information );
         }
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
@@ -128,7 +130,7 @@ namespace Calypso
                 e.SuppressKeyPress = true;
                 e.Handled = true;
 
-                Gallery.Populate(searchBox.Text);
+                GalleryManager.Populate(searchBox.Text);
             }
         }
 
@@ -147,5 +149,8 @@ namespace Calypso
         {
             LibraryManager.i.OpenSourceFolder();
         }
+
+
+
     }
 }

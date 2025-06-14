@@ -12,9 +12,8 @@ using MetadataExtractor.Formats.Xmp;
 using System.Diagnostics;
 namespace Calypso
 {
-    internal class Gallery
+    internal class GalleryManager
     {
-        static int thumbnailHeight = 150;
         static FlowLayoutPanel? flowLayoutGallery; // FlowLayoutPanel is non-nullable by default, idk if it matters or not
         static ContextMenuStrip? imageContextMenuStrip; 
         static MainWindow? mainW;
@@ -30,19 +29,47 @@ namespace Calypso
             }
         }
 
+        public enum GalleryMode
+        {
+            Directory,
+            Tag
+        }
+
         public static void Init(MainWindow mainW)
         {
-            Gallery.mainW = mainW;
-            Gallery.flowLayoutGallery = mainW.flowLayoutGallery;
-            Gallery.imageContextMenuStrip = mainW.imageContextMenuStrip;  
-            Gallery.pictureBoxPreview = mainW.pictureBoxImagePreview;
+            GalleryManager.mainW = mainW;
+            GalleryManager.flowLayoutGallery = mainW.flowLayoutGallery;
+            GalleryManager.imageContextMenuStrip = mainW.imageContextMenuStrip;  
+            GalleryManager.pictureBoxPreview = mainW.pictureBoxImagePreview;
 
+            flowLayoutGallery.AllowDrop = true;
+            flowLayoutGallery.DragEnter += flowLayoutGallery_DragEnter;
+            flowLayoutGallery.DragDrop += flowLayoutGallery_DragDrop;
 
-
-            //Debug.WriteLine("ddd"+Gallery.flowLayoutGallery);
-            //Debug.WriteLine("ddd"+Gallery.imageContextMenuStrip);
-            //Debug.WriteLine("ddd" + Gallery.pictureBoxPreview);
         }
+
+        private static void flowLayoutGallery_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy;
+        }
+
+        private static void flowLayoutGallery_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            string targetDir = @"C:\Users\lukaj\OneDrive\Desktop\New folder (2)";
+
+            foreach (string file in files)
+            {
+                string ext = Path.GetExtension(file).ToLower();
+                if (ext is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".gif")
+                {
+                    string destPath = Path.Combine(targetDir, Path.GetFileName(file));
+                    File.Copy(file, destPath, overwrite: false);
+                }
+            }
+        }
+
 
         public static void Populate(string directoryPath)
         {
@@ -61,16 +88,10 @@ namespace Calypso
                 return;
             }
 
-            string[] imageFiles = System.IO.Directory.GetFiles(directoryPath, "*.*")
-                                           .Where(f => f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
-                                                       f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
-                                                       f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
-                                                       f.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase) ||
-                                                       f.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
-                                           .ToArray();
+            string[] imageFiles = Util.GetAllImageFilepaths(directoryPath);
 
             StatusBar.ImagesLoaded = imageFiles.Length;
-            Gallery.mainW.toolStripLabelThumbnailSize.Text = $"Thumbnail Height: {thumbnailHeight}px";
+            GalleryManager.mainW.toolStripLabelThumbnailSize.Text = $"Thumbnail Height: {GlobalValues.ThumbnailHeight}px";
 
             GenerateContent(imageFiles);
 
@@ -97,12 +118,12 @@ namespace Calypso
             float processedCount = 0f;
             foreach (string file in imageFiles)
             {
-                Image thumbnail = CreateThumbnail(file);
+                Image thumbnail = Util.CreateThumbnail(file, GlobalValues.ThumbnailHeight);
 
                 PictureBox pb = new PictureBox
                 {
                     SizeMode = PictureBoxSizeMode.Zoom,
-                    Size = new Size(thumbnailHeight, thumbnailHeight),
+                    Size = new Size(GlobalValues.ThumbnailHeight, GlobalValues.ThumbnailHeight),
                     Image = thumbnail,
                     Margin = new Padding(5),
                     Tag = file
@@ -117,14 +138,14 @@ namespace Calypso
                     TextAlign = ContentAlignment.MiddleCenter,
                     Dock = DockStyle.Bottom,
                     AutoSize = false,
-                    Width = thumbnailHeight,
+                    Width = GlobalValues.ThumbnailHeight,
                     Height = 20
                 };
 
                 Panel container = new Panel
                 {
-                    Width = thumbnailHeight + 10,
-                    Height = thumbnailHeight + 30,
+                    Width = GlobalValues.ThumbnailHeight + 10,
+                    Height = GlobalValues.ThumbnailHeight + 30,
                     Margin = new Padding(5), 
                     BackColor = Color.DarkGray
                 };
@@ -139,6 +160,7 @@ namespace Calypso
                 
                 processedCount++;
                 LoadProgress = processedCount / imageFiles.Length;
+                thumbnail.Dispose();
             }
 
             LoadProgress = 0f;
@@ -199,17 +221,6 @@ namespace Calypso
             }
         }
 
-        public static Image CreateThumbnail(string imagePath)
-        {
-            using Image fullImage = Image.FromFile(imagePath);
-            int originalWidth = fullImage.Width;
-            int originalHeight = fullImage.Height;
-
-            int newHeight = thumbnailHeight;
-            int newWidth = (int)(originalWidth * (newHeight / (float)originalHeight));
-
-            return fullImage.GetThumbnailImage(newWidth, newHeight, () => false, IntPtr.Zero);
-        }
 
 
 

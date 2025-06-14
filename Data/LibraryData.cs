@@ -8,7 +8,7 @@ namespace Calypso
 {
     internal struct LibraryData
     {
-        public string LayoutName { get; set; }
+        //public string LayoutName { get; set; }
         public string DirectoryPath { get; set; }
         //public LayoutData Layout { get; set; }
 

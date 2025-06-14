@@ -38,7 +38,7 @@
             fileToolStripMenuItem = new ToolStripMenuItem();
             newGalleryToolStripMenuItem = new ToolStripMenuItem();
             openExistingLibraryToolStripMenuItem = new ToolStripMenuItem();
-            toolStripTextBox1 = new ToolStripTextBox();
+            toolStripMenuItem8 = new ToolStripMenuItem();
             toolStripMenuItem7 = new ToolStripMenuItem();
             exitToolStripMenuItem = new ToolStripMenuItem();
             viewToolStripMenuItem = new ToolStripMenuItem();
@@ -115,7 +115,7 @@
             menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, viewToolStripMenuItem, testToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(1077, 24);
+            menuStrip1.Size = new Size(1384, 24);
             menuStrip1.TabIndex = 6;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -134,22 +134,23 @@
             // 
             // openExistingLibraryToolStripMenuItem
             // 
-            openExistingLibraryToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripTextBox1, toolStripMenuItem7 });
+            openExistingLibraryToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem8, toolStripMenuItem7 });
             openExistingLibraryToolStripMenuItem.Name = "openExistingLibraryToolStripMenuItem";
             openExistingLibraryToolStripMenuItem.Size = new Size(180, 22);
             openExistingLibraryToolStripMenuItem.Text = "&Open Library";
             // 
-            // toolStripTextBox1
+            // toolStripMenuItem8
             // 
-            toolStripTextBox1.Name = "toolStripTextBox1";
-            toolStripTextBox1.Size = new Size(100, 23);
-            toolStripTextBox1.Text = "Library1 (current)";
+            toolStripMenuItem8.Enabled = false;
+            toolStripMenuItem8.Name = "toolStripMenuItem8";
+            toolStripMenuItem8.Size = new Size(180, 22);
+            toolStripMenuItem8.Text = "Library 1 (Current)";
             // 
             // toolStripMenuItem7
             // 
             toolStripMenuItem7.Name = "toolStripMenuItem7";
             toolStripMenuItem7.Size = new Size(180, 22);
-            toolStripMenuItem7.Text = "toolStripMenuItem7";
+            toolStripMenuItem7.Text = "Library 2";
             // 
             // exitToolStripMenuItem
             // 
@@ -168,7 +169,7 @@
             // toolStripMenuItem1
             // 
             toolStripMenuItem1.Name = "toolStripMenuItem1";
-            toolStripMenuItem1.Size = new Size(180, 22);
+            toolStripMenuItem1.Size = new Size(146, 22);
             toolStripMenuItem1.Text = "Library &Folder";
             toolStripMenuItem1.Click += toolStripMenuItem1_Click;
             // 
@@ -176,7 +177,7 @@
             // 
             toolStripMenuItem2.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem5, toolStripMenuItem3, toolStripSeparator1, toolStripMenuItem4, toolStripSeparator2, toolStripMenuItem6 });
             toolStripMenuItem2.Name = "toolStripMenuItem2";
-            toolStripMenuItem2.Size = new Size(180, 22);
+            toolStripMenuItem2.Size = new Size(146, 22);
             toolStripMenuItem2.Text = "Layout";
             // 
             // toolStripMenuItem5
@@ -229,7 +230,7 @@
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new Size(180, 22);
+            aboutToolStripMenuItem.Size = new Size(107, 22);
             aboutToolStripMenuItem.Text = "&About";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
@@ -243,7 +244,7 @@
             flowLayoutGallery.Location = new Point(0, 53);
             flowLayoutGallery.Name = "flowLayoutGallery";
             flowLayoutGallery.Padding = new Padding(12, 12, 12, 45);
-            flowLayoutGallery.Size = new Size(545, 593);
+            flowLayoutGallery.Size = new Size(705, 762);
             flowLayoutGallery.TabIndex = 7;
             // 
             // searchBox
@@ -260,9 +261,9 @@
             // 
             statusStrip1.BackColor = SystemColors.Control;
             statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripProgressBar1, toolStripStatusLabelImageCount, toolStripLabelThumbnailSize });
-            statusStrip1.Location = new Point(0, 670);
+            statusStrip1.Location = new Point(0, 839);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(1077, 22);
+            statusStrip1.Size = new Size(1384, 22);
             statusStrip1.TabIndex = 9;
             statusStrip1.Text = "statusStrip1";
             // 
@@ -345,7 +346,7 @@
             tagTree.Dock = DockStyle.Fill;
             tagTree.Location = new Point(0, 0);
             tagTree.Name = "tagTree";
-            tagTree.Size = new Size(228, 309);
+            tagTree.Size = new Size(293, 389);
             tagTree.TabIndex = 10;
             // 
             // searchPanel
@@ -358,7 +359,7 @@
             searchPanel.Dock = DockStyle.Top;
             searchPanel.Location = new Point(0, 0);
             searchPanel.Name = "searchPanel";
-            searchPanel.Size = new Size(545, 53);
+            searchPanel.Size = new Size(705, 53);
             searchPanel.TabIndex = 12;
             // 
             // comboBox1
@@ -398,7 +399,7 @@
             tableLayoutImageInfo.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             tableLayoutImageInfo.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             tableLayoutImageInfo.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            tableLayoutImageInfo.Size = new Size(272, 56);
+            tableLayoutImageInfo.Size = new Size(354, 56);
             tableLayoutImageInfo.TabIndex = 3;
             // 
             // button1
@@ -406,7 +407,7 @@
             button1.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             button1.Location = new Point(9, 20);
             button1.Name = "button1";
-            button1.Size = new Size(98, 30);
+            button1.Size = new Size(180, 30);
             button1.TabIndex = 0;
             button1.Text = "[T] Open Tag Editor";
             button1.UseVisualStyleBackColor = true;
@@ -418,7 +419,7 @@
             pictureBoxImagePreview.Dock = DockStyle.Fill;
             pictureBoxImagePreview.Location = new Point(0, 0);
             pictureBoxImagePreview.Name = "pictureBoxImagePreview";
-            pictureBoxImagePreview.Size = new Size(274, 435);
+            pictureBoxImagePreview.Size = new Size(356, 548);
             pictureBoxImagePreview.TabIndex = 0;
             pictureBoxImagePreview.TabStop = false;
             // 
@@ -429,7 +430,7 @@
             middleFillPanelContainer.Dock = DockStyle.Fill;
             middleFillPanelContainer.Location = new Point(0, 0);
             middleFillPanelContainer.Name = "middleFillPanelContainer";
-            middleFillPanelContainer.Size = new Size(545, 646);
+            middleFillPanelContainer.Size = new Size(705, 815);
             middleFillPanelContainer.TabIndex = 14;
             // 
             // tagTreeGallerySplitContainer
@@ -445,8 +446,8 @@
             // tagTreeGallerySplitContainer.Panel2
             // 
             tagTreeGallerySplitContainer.Panel2.Controls.Add(middleFillPanelContainer);
-            tagTreeGallerySplitContainer.Size = new Size(780, 646);
-            tagTreeGallerySplitContainer.SplitterDistance = 228;
+            tagTreeGallerySplitContainer.Size = new Size(1005, 815);
+            tagTreeGallerySplitContainer.SplitterDistance = 293;
             tagTreeGallerySplitContainer.SplitterWidth = 7;
             tagTreeGallerySplitContainer.TabIndex = 17;
             // 
@@ -464,8 +465,8 @@
             // horizontalLeftSplitContainer.Panel2
             // 
             horizontalLeftSplitContainer.Panel2.Controls.Add(savedSearchesTreeView);
-            horizontalLeftSplitContainer.Size = new Size(228, 646);
-            horizontalLeftSplitContainer.SplitterDistance = 309;
+            horizontalLeftSplitContainer.Size = new Size(293, 815);
+            horizontalLeftSplitContainer.SplitterDistance = 389;
             horizontalLeftSplitContainer.TabIndex = 11;
             // 
             // savedSearchesTreeView
@@ -483,7 +484,7 @@
             treeNode4.Name = "Node0";
             treeNode4.Text = "Node0";
             savedSearchesTreeView.Nodes.AddRange(new TreeNode[] { treeNode4 });
-            savedSearchesTreeView.Size = new Size(228, 333);
+            savedSearchesTreeView.Size = new Size(293, 422);
             savedSearchesTreeView.TabIndex = 11;
             // 
             // imageInfoHorizontalSplitContainer
@@ -501,8 +502,8 @@
             // imageInfoHorizontalSplitContainer.Panel2
             // 
             imageInfoHorizontalSplitContainer.Panel2.Controls.Add(imageMetadataPanel);
-            imageInfoHorizontalSplitContainer.Size = new Size(274, 646);
-            imageInfoHorizontalSplitContainer.SplitterDistance = 435;
+            imageInfoHorizontalSplitContainer.Size = new Size(356, 815);
+            imageInfoHorizontalSplitContainer.SplitterDistance = 548;
             imageInfoHorizontalSplitContainer.SplitterWidth = 5;
             imageInfoHorizontalSplitContainer.TabIndex = 0;
             // 
@@ -514,7 +515,7 @@
             imageMetadataPanel.Dock = DockStyle.Fill;
             imageMetadataPanel.Location = new Point(0, 0);
             imageMetadataPanel.Name = "imageMetadataPanel";
-            imageMetadataPanel.Size = new Size(274, 206);
+            imageMetadataPanel.Size = new Size(356, 262);
             imageMetadataPanel.TabIndex = 0;
             // 
             // panel1
@@ -523,10 +524,10 @@
             panel1.Controls.Add(button2);
             panel1.Controls.Add(button1);
             panel1.Dock = DockStyle.Bottom;
-            panel1.Location = new Point(0, 145);
+            panel1.Location = new Point(0, 201);
             panel1.Name = "panel1";
             panel1.Padding = new Padding(6);
-            panel1.Size = new Size(272, 59);
+            panel1.Size = new Size(354, 59);
             panel1.TabIndex = 1;
             // 
             // button2
@@ -534,7 +535,7 @@
             button2.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             button2.Location = new Point(113, 20);
             button2.Name = "button2";
-            button2.Size = new Size(98, 30);
+            button2.Size = new Size(180, 30);
             button2.TabIndex = 1;
             button2.Text = "Random Image";
             button2.UseVisualStyleBackColor = true;
@@ -552,8 +553,8 @@
             // masterSplitContainer.Panel2
             // 
             masterSplitContainer.Panel2.Controls.Add(imageInfoHorizontalSplitContainer);
-            masterSplitContainer.Size = new Size(1061, 646);
-            masterSplitContainer.SplitterDistance = 780;
+            masterSplitContainer.Size = new Size(1368, 815);
+            masterSplitContainer.SplitterDistance = 1005;
             masterSplitContainer.SplitterWidth = 7;
             masterSplitContainer.TabIndex = 0;
             // 
@@ -564,14 +565,14 @@
             masterPanelWrapper.Location = new Point(0, 24);
             masterPanelWrapper.Name = "masterPanelWrapper";
             masterPanelWrapper.Padding = new Padding(8, 0, 8, 0);
-            masterPanelWrapper.Size = new Size(1077, 646);
+            masterPanelWrapper.Size = new Size(1384, 815);
             masterPanelWrapper.TabIndex = 0;
             // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1077, 692);
+            ClientSize = new Size(1384, 861);
             Controls.Add(masterPanelWrapper);
             Controls.Add(menuStrip1);
             Controls.Add(statusStrip1);
@@ -662,8 +663,8 @@
         public Panel panel1;
         public Panel imageMetadataPanel;
         public Button button2;
-        private ToolStripTextBox toolStripTextBox1;
         private ToolStripMenuItem toolStripMenuItem7;
         private ComboBox comboBox1;
+        private ToolStripMenuItem toolStripMenuItem8;
     }
 }
