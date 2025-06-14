@@ -6,7 +6,12 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>icon_i2.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="icon_i2.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MetadataExtractor" Version="2.8.1" />

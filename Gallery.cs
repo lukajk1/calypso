@@ -10,14 +10,15 @@ using MetadataExtractor;
 using MetadataExtractor.Formats.Iptc;
 using MetadataExtractor.Formats.Xmp;
 using System.Diagnostics;
-namespace CalypsoExperiment1
+namespace Calypso
 {
     internal class Gallery
     {
         static int thumbnailHeight = 150;
-        static FlowLayoutPanel? flowLayoutPanel; // FlowLayoutPanel is non-nullable by default, idk if it matters or not
+        static FlowLayoutPanel? flowLayoutGallery; // FlowLayoutPanel is non-nullable by default, idk if it matters or not
         static ContextMenuStrip? imageContextMenuStrip; 
-        static Form1? form1; 
+        static MainWindow? mainW;
+        static PictureBox? pictureBoxPreview;
 
         private static float _loadProgress = 0f;
         public static float LoadProgress
@@ -25,25 +26,32 @@ namespace CalypsoExperiment1
             get => _loadProgress;
             set
             {
-                form1.toolStripProgressBar1.Value = (int)(value * 100f);
+                mainW.toolStripProgressBar1.Value = (int)(value * 100f);
             }
         }
 
-        public static void Init(Form1 form1, FlowLayoutPanel flowLayoutPanel, ContextMenuStrip? imageContextMenuStrip)
+        public static void Init(MainWindow mainW)
         {
-            Gallery.form1 = form1;
-            Gallery.flowLayoutPanel = flowLayoutPanel;
-            Gallery.imageContextMenuStrip = imageContextMenuStrip;  
+            Gallery.mainW = mainW;
+            Gallery.flowLayoutGallery = mainW.flowLayoutGallery;
+            Gallery.imageContextMenuStrip = mainW.imageContextMenuStrip;  
+            Gallery.pictureBoxPreview = mainW.pictureBoxImagePreview;
+
+
+
+            //Debug.WriteLine("ddd"+Gallery.flowLayoutGallery);
+            //Debug.WriteLine("ddd"+Gallery.imageContextMenuStrip);
+            //Debug.WriteLine("ddd" + Gallery.pictureBoxPreview);
         }
 
         public static void Populate(string directoryPath)
         {
-            List<Control> controlsToRemove = flowLayoutPanel.Controls.Cast<Control>().ToList();
+            List<Control> controlsToRemove = flowLayoutGallery.Controls.Cast<Control>().ToList();
 
             foreach (Control control in controlsToRemove)
             {
                 if (control is TextBox) continue;
-                flowLayoutPanel.Controls.Remove(control); // Remove from the panel
+                flowLayoutGallery.Controls.Remove(control); // Remove from the panel
                 control.Dispose(); // Dispose of the control to release its resources
             }
 
@@ -62,6 +70,7 @@ namespace CalypsoExperiment1
                                            .ToArray();
 
             StatusBar.ImagesLoaded = imageFiles.Length;
+            Gallery.mainW.toolStripLabelThumbnailSize.Text = $"Thumbnail Height: {thumbnailHeight}px";
 
             GenerateContent(imageFiles);
 
@@ -116,7 +125,8 @@ namespace CalypsoExperiment1
                 {
                     Width = thumbnailHeight + 10,
                     Height = thumbnailHeight + 30,
-                    Margin = new Padding(5)
+                    Margin = new Padding(5), 
+                    BackColor = Color.DarkGray
                 };
 
                 AddDraggableHandlers(pb);
@@ -125,7 +135,7 @@ namespace CalypsoExperiment1
                 container.Controls.Add(pb);
                 container.Controls.Add(label);
 
-                flowLayoutPanel.Controls.Add(container);
+                flowLayoutGallery.Controls.Add(container);
                 
                 processedCount++;
                 LoadProgress = processedCount / imageFiles.Length;
@@ -182,7 +192,11 @@ namespace CalypsoExperiment1
         }
         private static void PictureBox_Click(object? sender, EventArgs e)
         {
-            // ..
+            if (sender is PictureBox clickedPictureBox)
+            {
+                //pictureBoxPreview.Image = clickedPictureBox.Image;
+                ImageInfoPanel.Load(clickedPictureBox);
+            }
         }
 
         public static Image CreateThumbnail(string imagePath)

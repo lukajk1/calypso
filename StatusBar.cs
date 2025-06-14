@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CalypsoExperiment1
+namespace Calypso
 {
     internal class StatusBar
     {
         private static ToolStripStatusLabel? statusStripImageCount;
-        public static void Init(ToolStripStatusLabel statusStripImageCount)
+        public static void Init(MainWindow mainW)
         {
-            StatusBar.statusStripImageCount = statusStripImageCount;
+            StatusBar.statusStripImageCount = mainW.toolStripStatusLabelImageCount;
         }
 
 

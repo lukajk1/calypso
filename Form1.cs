@@ -1,19 +1,102 @@
-namespace CalypsoExperiment1
+using System.Windows.Forms;
+
+namespace Calypso
 {
-    public partial class Form1 : Form
+    public partial class MainWindow : Form
     {
-        public Form1()
+
+        public MainWindow()
         {
             InitializeComponent();
 
-            Gallery.Init(this, flowLayoutPanel1, imageContextMenuStrip);
-            StatusBar.Init(toolStripStatusLabelImageCount);
-            TagTree.Init(tagTree);
-
-            Gallery.Populate(@"C:\Users\lukaj\My Drive\art\art ref\may25");
+            new LibraryManager(this);
 
         }
 
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            // single key shortcuts --------------------------------------------------------------------------------
+            if (keyData == Keys.R)
+            {
+                LayoutManager.i.TogglePanel(tagTreeGallerySplitContainer, 1);
+                return true; // suppress further handling
+            }
+            else if (keyData == Keys.N)
+            {
+                LayoutManager.i.TogglePanel(masterSplitContainer, 2);
+                return true;
+            }
+            else if (keyData == Keys.I)
+            {
+                //MessageBox.Show("recieved");
+                LayoutManager.i.TogglePanel(imageInfoHorizontalSplitContainer, 2);
+                return true;
+            }
+
+            // ctrl shortcuts --------------------------------------------------------------------------------
+            if (keyData == (Keys.Control | Keys.Q))
+            {
+                Close();
+                return true;
+            }
+            else if (keyData == (Keys.Control | Keys.L))
+            {
+                Control focused = Form.ActiveForm?.ActiveControl;
+
+                if (focused == searchBox)
+                {
+
+                    // Move focus to next focusable control
+                    SelectNextControl(ActiveControl, true, true, true, true);
+                }
+                else
+                    searchBox.Focus();
+
+
+                return true;
+            }
+            else if (keyData == (Keys.Control | Keys.D1))
+            {
+                LayoutManager.i.LoadLayout(LayoutManager.DefaultLayout);
+                return true;
+            }
+            else if (keyData == (Keys.Control | Keys.D2))
+            {
+                //MessageBox.Show("received");
+                LayoutManager.i.LoadLayout(LayoutManager.LargeWindow);
+                return true;
+            }
+            else if (keyData == (Keys.Control | Keys.S))
+            {
+                MessageBox.Show($"{masterSplitContainer.SplitterDistance}");
+
+
+                return true;
+            }
+
+            // ctrl shift shortcuts --------------------------------------------------------------------------------
+            //else if (keyData == (Keys.Control | Keys.Shift | Keys.D1))
+            //{
+            //    // Ctrl + Shift + 1
+            //    return true;
+            //}
+            //else if (keyData == (Keys.Control | Keys.Shift | Keys.D2))
+            //{
+            //    // Ctrl + Shift + 2
+            //    return true;
+            //}
+
+
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        private void OpenTagModifier()
+        {
+            TagModifier tagM = new TagModifier(this);
+            tagM.Show();
+
+        }
         public static void PictureBox_DoubleClick(object sender, EventArgs e)
         {
             if (sender is PictureBox pb && pb.Tag is string imagePath)
@@ -30,11 +113,11 @@ namespace CalypsoExperiment1
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Created by lukajk");
+            MessageBox.Show("Calypso Image Manager v0.1a\nCreated by lukajk");
         }
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
@@ -45,8 +128,24 @@ namespace CalypsoExperiment1
                 e.SuppressKeyPress = true;
                 e.Handled = true;
 
-                Gallery.Populate(textBox1.Text);
+                Gallery.Populate(searchBox.Text);
             }
+        }
+
+        private void toolStripMenuItem5_Click(object sender, EventArgs e)
+        {
+
+            LayoutManager.i.LoadLayout(LayoutManager.DefaultLayout);
+        }
+
+        private void toolStripMenuItem3_Click(object sender, EventArgs e)
+        {
+            LayoutManager.i.LoadLayout(LayoutManager.LargeWindow);
+        }
+
+        private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            LibraryManager.i.OpenSourceFolder();
         }
     }
 }
