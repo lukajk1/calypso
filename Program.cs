@@ -13,21 +13,5 @@ namespace Calypso
             ApplicationConfiguration.Initialize();
             Application.Run(new MainWindow());
         }
-
-        //static Mutex mutex = new Mutex(true, "<some_guid_or_unique_name>");
-
-        //[STAThread]
-        //static void Main()
-        //{
-        //    if (mutex.WaitOne(TimeSpan.Zero, true))
-        //    {
-        //        ApplicationConfiguration.Initialize();
-        //        Application.Run(new MainWindow());
-
-        //        // release mutex after the form is closed.
-        //        mutex.ReleaseMutex();
-        //        mutex.Dispose();
-        //    }
-        //}
     }
 }

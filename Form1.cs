@@ -1,3 +1,5 @@
+using Calypso.UI;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
 
 namespace Calypso
@@ -9,7 +11,7 @@ namespace Calypso
         {
             InitializeComponent();
 
-            new LibraryManager(this);
+            new Database(this);
 
         }
 
@@ -55,22 +57,29 @@ namespace Calypso
 
                 return true;
             }
+
             else if (keyData == (Keys.Control | Keys.D1))
             {
-                LayoutManager.i.LoadLayout(LayoutManager.DefaultLayout);
+                LayoutManager.i.SetLayout(LayoutManager.DefaultLayout);
                 return true;
             }
             else if (keyData == (Keys.Control | Keys.D2))
             {
                 //MessageBox.Show("received");
-                LayoutManager.i.LoadLayout(LayoutManager.LargeWindow);
+                LayoutManager.i.SetLayout(LayoutManager.LargeWindow);
                 return true;
             }
+
             else if (keyData == (Keys.Control | Keys.S))
             {
                 MessageBox.Show($"{masterSplitContainer.SplitterDistance}");
 
 
+                return true;
+            }
+            else if (keyData == (Keys.Control | Keys.I))
+            {
+                Commands.AddFilesViaDialog();
                 return true;
             }
 
@@ -119,38 +128,49 @@ namespace Calypso
         {
             string message = "Calypso Image Manager v1.0.0\nSupported file types: .jpg, .jpeg, .png, .bmp, .gif\nCreated by lukajk";
             string title = "About";
-            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information );
+            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                // Prevent the "ding" sound often associated with Enter key in textboxes
+                // suppress potential sfx
                 e.SuppressKeyPress = true;
                 e.Handled = true;
 
-                GalleryManager.Populate(searchBox.Text);
+
+                if (File.Exists(searchBox.Text)) 
+                { 
+                    // handle file explorer capabilities at some point? 
+                } 
+                else
+                {
+                    Searchbar.Search(searchBox.Text);
+                }
+
             }
         }
 
         private void toolStripMenuItem5_Click(object sender, EventArgs e)
         {
 
-            LayoutManager.i.LoadLayout(LayoutManager.DefaultLayout);
+            LayoutManager.i.SetLayout(LayoutManager.DefaultLayout);
         }
 
         private void toolStripMenuItem3_Click(object sender, EventArgs e)
         {
-            LayoutManager.i.LoadLayout(LayoutManager.LargeWindow);
+            LayoutManager.i.SetLayout(LayoutManager.LargeWindow);
         }
 
         private void toolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            LibraryManager.i.OpenSourceFolder();
+            Database.i.OpenSourceFolder();
         }
 
-
-
+        private void toolStripMenuItem9_Click(object sender, EventArgs e)
+        {
+            Commands.AddFilesViaDialog();
+        }
     }
 }

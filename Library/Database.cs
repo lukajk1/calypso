@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Calypso.UI;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -9,30 +12,34 @@ using System.Threading.Tasks;
 
 namespace Calypso
 {
-    internal class LibraryManager
+    internal class Database
     {
         int currentLibrary = 0;
-        LibraryData[] loadedLibraries;
+        LibraryDataStruct[] loadedLibraries;
         string librariesFilePath;
-
-        public static LibraryManager i { get; private set; }
+        public List<ImageData> loadedImageDataDatabase = new();
+        public List<ImageData> dbUntaggedImageData = new();
+        public static Database i { get; private set; }
         MainWindow mainW;
-        public LibraryManager(MainWindow mainW)
+        public Database(MainWindow mainW)
         {
             i = this;
             this.mainW = mainW;
 
-            GalleryManager.Init(mainW);
+            Gallery.Init(mainW);
             StatusBar.Init(mainW);
             TagTreesPanel.Init(mainW);
             ImageInfoPanel.Init(mainW);
+            Searchbar.Init(mainW);
+
             new LayoutManager(mainW);
+            LayoutManager.i.SetLayout(LayoutManager.DefaultLayout);
 
             Start();
         }
 
         // needs to store library list.. that's it?  
-        private void Start()
+        public void Start()
         {
             string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
 "CalypsoManager");
@@ -42,29 +49,32 @@ namespace Calypso
             {
                 Directory.CreateDirectory(appDataPath);
             }
-            else
+            else // in theory this would prompt you to designate a directory but 
             {
                 if (!File.Exists(librariesFilePath))
                 {
 
-                    LibraryData[] defaultLibraries = new LibraryData[]
+                    LibraryDataStruct[] defaultLibraries = new LibraryDataStruct[]
                     {
-                        new LibraryData() {
-                            DirectoryPath = "C:\\Users\\lukaj\\My Drive\\art\\art ref\\calypso_artref_library"
+                        new LibraryDataStruct() {
+                            DirectoryPath = @"C:\Users\lukaj\My Drive\art\art ref\calypso_artref_library"
                         }
                     };
 
-                    Util.SerializeToFile<LibraryData[]>(defaultLibraries, librariesFilePath);
+                    Util.SerializeToFile<LibraryDataStruct[]>(defaultLibraries, librariesFilePath);
                 }
-                LibraryData[] loadedLibraries = Util.DeserializeFromFile<LibraryData[]>(librariesFilePath);
+                loadedLibraries = Util.DeserializeFromFile<LibraryDataStruct[]>(librariesFilePath);
 
                 currentLibrary = 0;
                 LoadLibrary(loadedLibraries[currentLibrary]);
-                LayoutManager.i.LoadLayout(LayoutManager.DefaultLayout);
 
             }
         }
-        public void LoadLibrary(LibraryData library)
+        public void LoadLibrary()
+        {
+            LoadLibrary(loadedLibraries[currentLibrary]);
+        }
+        private void LoadLibrary(LibraryDataStruct library)
         {
             // check for thumbnails
             //GalleryManager.Populate(library.DirectoryPath);
@@ -79,22 +89,22 @@ namespace Calypso
 
             ImageData[] unregisteredImages;
             List<string> unregisteredImagesList = new List<string>();
-            List<ImageData> existingImageDataEntries = new();
+            loadedImageDataDatabase.Clear();
 
             // create databse directory if dne. in either case, gather a list of unregistered images.
             if (Directory.Exists(pathDatabaseDirectory))
             {
                 // read from the file. If the database directory exists then database.json is presumed to exist.
-                existingImageDataEntries = Util.DeserializeFromFile<List<ImageData>>(pathDatabaseJson);
-                Dictionary<string, ImageData> dict = DatabaseSearch.GenerateFilenameDict(existingImageDataEntries);
+                loadedImageDataDatabase = Util.DeserializeFromFile<List<ImageData>>(pathDatabaseJson);
+                Dictionary<string, ImageData> dict = DBUtilities.GenerateFilenameDict(loadedImageDataDatabase);
 
                 string[] allImageFiles = Util.GetAllImageFilepaths(library.DirectoryPath);
 
-                foreach (string file in allImageFiles)
+                foreach (string filepath in allImageFiles)
                 {
-                    if (!dict.ContainsKey(file))
+                    if (!dict.ContainsKey(Path.GetFileName(filepath)))
                     {
-                        unregisteredImagesList.Add(file); // add all filenames that aren't registered in the database to a list
+                        unregisteredImagesList.Add(filepath); // add all filenames that aren't registered in the database to a list
                     }
                 }
 
@@ -108,24 +118,24 @@ namespace Calypso
                     unregisteredImagesList.Add(file);
                 }
             }
-
+            
             if (!Directory.Exists(pathThumbnailDir)) 
                 Directory.CreateDirectory(pathThumbnailDir);
 
             foreach (string filepath in unregisteredImagesList)
             {
-                // gen a thumbnail for each, save to thumb
-                Image thumb = Util.CreateThumbnail(filepath, GlobalValues.ThumbnailHeight);
-
                 string filename = Path.GetFileName(filepath);
                 string thumbSavePath = Path.Combine(pathThumbnailDir, "thumb_" + filename);
 
+                if (File.Exists(thumbSavePath))
+                    continue;
+
+                using Image thumb = Util.CreateThumbnail(filepath, GlobalValues.ThumbnailHeight);
                 ImageFormat format = Util.GetImageFormatFromExtension(thumbSavePath);
                 thumb.Save(thumbSavePath, format);
 
-                // register each to the database via creating an ImageData for it
-
-                existingImageDataEntries.Add(new ImageData()
+                // register to db
+                loadedImageDataDatabase.Add(new ImageData()
                 {
                     FullResPath = filepath,
                     ThumbnailPath = thumbSavePath,
@@ -134,10 +144,50 @@ namespace Calypso
                 });
             }
 
-            Util.SerializeToFile<List<ImageData>>(existingImageDataEntries, pathDatabaseJson);
+            DBUtilities.GenerateTagDict(loadedImageDataDatabase);
 
+            Util.SerializeToFile<List<ImageData>>(loadedImageDataDatabase, pathDatabaseJson); // save potential new images to file
+
+            foreach (ImageData entry in  loadedImageDataDatabase)
+            {
+                if (entry.Tags.Count > 0)
+                {
+                    foreach (string item in entry.Tags)
+                        Debug.WriteLine($"{entry.Filename} : {item}");
+                }
+                else
+                    Debug.WriteLine("no tags found");
+            }
+
+            CollateTagCount(loadedImageDataDatabase);
+            Searchbar.Search("all");
         }
+        private void CollateTagCount(List<ImageData> db)
+        {
+            dbUntaggedImageData.Clear();
 
+            Dictionary<string, int> tagCounts = new();
+            int totalEntriesCount = db.Count;
+
+            foreach (ImageData entry in db)
+            {
+                if (entry.Tags.Count == 0)
+                {
+                    dbUntaggedImageData.Add(entry);
+                    continue;
+                }
+
+                foreach (string tag in entry.Tags)
+                {
+                    if (tagCounts.ContainsKey(tag))
+                        tagCounts[tag]++;
+                    else
+                        tagCounts[tag] = 1;
+                }
+            }
+
+            TagTreesPanel.Populate(tagCounts, dbUntaggedImageData.Count, totalEntriesCount);
+        }
         public void OpenSourceFolder()
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -147,5 +197,19 @@ namespace Calypso
             });
 
         }
+
+        public void SendImageFilesToLibrary(string[] filepaths)
+        {
+            foreach (string filepath in filepaths)
+            {
+                if (File.Exists(filepath))
+                {
+                    string filename = Path.GetFileName(filepath);
+                    string destFilepath = Path.Combine(loadedLibraries[currentLibrary].DirectoryPath, filename);
+                    File.Copy(filepath, destFilepath, overwrite: false);
+                }
+            }
+        }
+
     }
 }

@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace Calypso
 {
-    internal struct LibraryData
+    internal struct LibraryDataStruct
     {
-        //public string LayoutName { get; set; }
         public string DirectoryPath { get; set; }
+
+        //public string LayoutName { get; set; }
         //public LayoutData Layout { get; set; }
 
         //public LibraryData(

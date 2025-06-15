@@ -29,10 +29,6 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            TreeNode treeNode1 = new TreeNode("Node1");
-            TreeNode treeNode2 = new TreeNode("Node2");
-            TreeNode treeNode3 = new TreeNode("Node3");
-            TreeNode treeNode4 = new TreeNode("Node0", new TreeNode[] { treeNode1, treeNode2, treeNode3 });
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             menuStrip1 = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
@@ -40,9 +36,10 @@
             openExistingLibraryToolStripMenuItem = new ToolStripMenuItem();
             toolStripMenuItem8 = new ToolStripMenuItem();
             toolStripMenuItem7 = new ToolStripMenuItem();
+            toolStripMenuItem9 = new ToolStripMenuItem();
+            toolStripMenuItem1 = new ToolStripMenuItem();
             exitToolStripMenuItem = new ToolStripMenuItem();
             viewToolStripMenuItem = new ToolStripMenuItem();
-            toolStripMenuItem1 = new ToolStripMenuItem();
             toolStripMenuItem2 = new ToolStripMenuItem();
             toolStripMenuItem5 = new ToolStripMenuItem();
             toolStripMenuItem3 = new ToolStripMenuItem();
@@ -69,7 +66,7 @@
             tagTree = new TreeView();
             searchPanel = new Panel();
             comboBox1 = new ComboBox();
-            checkBox1 = new CheckBox();
+            checkBoxRandomize = new CheckBox();
             tableLayoutImageInfo = new TableLayoutPanel();
             button1 = new Button();
             pictureBoxImagePreview = new PictureBox();
@@ -121,7 +118,7 @@
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newGalleryToolStripMenuItem, openExistingLibraryToolStripMenuItem, exitToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newGalleryToolStripMenuItem, openExistingLibraryToolStripMenuItem, toolStripMenuItem9, toolStripMenuItem1, exitToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new Size(37, 20);
             fileToolStripMenuItem.Text = "&File";
@@ -129,55 +126,66 @@
             // newGalleryToolStripMenuItem
             // 
             newGalleryToolStripMenuItem.Name = "newGalleryToolStripMenuItem";
-            newGalleryToolStripMenuItem.Size = new Size(180, 22);
+            newGalleryToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl + N";
+            newGalleryToolStripMenuItem.Size = new Size(245, 22);
             newGalleryToolStripMenuItem.Text = "&New Library...";
             // 
             // openExistingLibraryToolStripMenuItem
             // 
             openExistingLibraryToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem8, toolStripMenuItem7 });
             openExistingLibraryToolStripMenuItem.Name = "openExistingLibraryToolStripMenuItem";
-            openExistingLibraryToolStripMenuItem.Size = new Size(180, 22);
+            openExistingLibraryToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl + O";
+            openExistingLibraryToolStripMenuItem.Size = new Size(245, 22);
             openExistingLibraryToolStripMenuItem.Text = "&Open Library";
             // 
             // toolStripMenuItem8
             // 
             toolStripMenuItem8.Enabled = false;
             toolStripMenuItem8.Name = "toolStripMenuItem8";
-            toolStripMenuItem8.Size = new Size(180, 22);
+            toolStripMenuItem8.Size = new Size(170, 22);
             toolStripMenuItem8.Text = "Library 1 (Current)";
             // 
             // toolStripMenuItem7
             // 
             toolStripMenuItem7.Name = "toolStripMenuItem7";
-            toolStripMenuItem7.Size = new Size(180, 22);
+            toolStripMenuItem7.Size = new Size(170, 22);
             toolStripMenuItem7.Text = "Library 2";
+            // 
+            // toolStripMenuItem9
+            // 
+            toolStripMenuItem9.Name = "toolStripMenuItem9";
+            toolStripMenuItem9.ShortcutKeyDisplayString = "Ctrl + I";
+            toolStripMenuItem9.Size = new Size(245, 22);
+            toolStripMenuItem9.Text = "&Add Files to Library...";
+            toolStripMenuItem9.Click += toolStripMenuItem9_Click;
+            // 
+            // toolStripMenuItem1
+            // 
+            toolStripMenuItem1.Name = "toolStripMenuItem1";
+            toolStripMenuItem1.ShortcutKeyDisplayString = "Ctrl + Enter";
+            toolStripMenuItem1.Size = new Size(245, 22);
+            toolStripMenuItem1.Text = "Open Library &Folder";
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(180, 22);
+            exitToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl + Q";
+            exitToolStripMenuItem.Size = new Size(245, 22);
             exitToolStripMenuItem.Text = "E&xit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // viewToolStripMenuItem
             // 
-            viewToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem1, toolStripMenuItem2 });
+            viewToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem2 });
             viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             viewToolStripMenuItem.Size = new Size(44, 20);
             viewToolStripMenuItem.Text = "&View";
-            // 
-            // toolStripMenuItem1
-            // 
-            toolStripMenuItem1.Name = "toolStripMenuItem1";
-            toolStripMenuItem1.Size = new Size(146, 22);
-            toolStripMenuItem1.Text = "Library &Folder";
-            toolStripMenuItem1.Click += toolStripMenuItem1_Click;
             // 
             // toolStripMenuItem2
             // 
             toolStripMenuItem2.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem5, toolStripMenuItem3, toolStripSeparator1, toolStripMenuItem4, toolStripSeparator2, toolStripMenuItem6 });
             toolStripMenuItem2.Name = "toolStripMenuItem2";
-            toolStripMenuItem2.Size = new Size(146, 22);
+            toolStripMenuItem2.Size = new Size(110, 22);
             toolStripMenuItem2.Text = "Layout";
             // 
             // toolStripMenuItem5
@@ -354,7 +362,7 @@
             searchPanel.BackColor = SystemColors.ControlLight;
             searchPanel.BorderStyle = BorderStyle.FixedSingle;
             searchPanel.Controls.Add(comboBox1);
-            searchPanel.Controls.Add(checkBox1);
+            searchPanel.Controls.Add(checkBoxRandomize);
             searchPanel.Controls.Add(searchBox);
             searchPanel.Dock = DockStyle.Top;
             searchPanel.Location = new Point(0, 0);
@@ -371,15 +379,15 @@
             comboBox1.Size = new Size(66, 23);
             comboBox1.TabIndex = 13;
             // 
-            // checkBox1
+            // checkBoxRandomize
             // 
-            checkBox1.AutoSize = true;
-            checkBox1.Location = new Point(440, 15);
-            checkBox1.Name = "checkBox1";
-            checkBox1.Size = new Size(85, 19);
-            checkBox1.TabIndex = 12;
-            checkBox1.Text = "Randomize";
-            checkBox1.UseVisualStyleBackColor = true;
+            checkBoxRandomize.AutoSize = true;
+            checkBoxRandomize.Location = new Point(440, 15);
+            checkBoxRandomize.Name = "checkBoxRandomize";
+            checkBoxRandomize.Size = new Size(85, 19);
+            checkBoxRandomize.TabIndex = 12;
+            checkBoxRandomize.Text = "Randomize";
+            checkBoxRandomize.UseVisualStyleBackColor = true;
             // 
             // tableLayoutImageInfo
             // 
@@ -475,15 +483,6 @@
             savedSearchesTreeView.Dock = DockStyle.Fill;
             savedSearchesTreeView.Location = new Point(0, 0);
             savedSearchesTreeView.Name = "savedSearchesTreeView";
-            treeNode1.Name = "Node1";
-            treeNode1.Text = "Node1";
-            treeNode2.Name = "Node2";
-            treeNode2.Text = "Node2";
-            treeNode3.Name = "Node3";
-            treeNode3.Text = "Node3";
-            treeNode4.Name = "Node0";
-            treeNode4.Text = "Node0";
-            savedSearchesTreeView.Nodes.AddRange(new TreeNode[] { treeNode4 });
             savedSearchesTreeView.Size = new Size(293, 422);
             savedSearchesTreeView.TabIndex = 11;
             // 
@@ -637,7 +636,6 @@
         public TextBox searchBox;
         public Panel searchPanel;
         public ToolStripMenuItem viewToolStripMenuItem;
-        public ToolStripMenuItem toolStripMenuItem1;
         public ToolStripStatusLabel toolStripLabelThumbnailSize;
         public Panel middleFillPanelContainer;
         public Splitter splitterRight;
@@ -652,7 +650,7 @@
         public ToolStripSeparator toolStripSeparator1;
         public ToolStripSeparator toolStripSeparator2;
         public ToolStripMenuItem toolStripMenuItem6;
-        public CheckBox checkBox1;
+        public CheckBox checkBoxRandomize;
         public SplitContainer tagTreeGallerySplitContainer;
         public SplitContainer imageInfoHorizontalSplitContainer;
         public SplitContainer masterSplitContainer;
@@ -666,5 +664,7 @@
         private ToolStripMenuItem toolStripMenuItem7;
         private ComboBox comboBox1;
         private ToolStripMenuItem toolStripMenuItem8;
+        private ToolStripMenuItem toolStripMenuItem9;
+        private ToolStripMenuItem toolStripMenuItem1;
     }
 }

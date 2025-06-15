@@ -38,7 +38,7 @@ namespace Calypso
             i.masterSplitContainer = mainW.masterSplitContainer;
         }
 
-        public void LoadLayout(LayoutData ld)
+        public void SetLayout(LayoutData ld)
         {
             SetPanel(i.masterSplitContainer, 2, ld.RightPanel_IsOpen);
             SetPanel(i.tagTreeSplitContainer, 1, ld.LeftPanel_IsOpen);
