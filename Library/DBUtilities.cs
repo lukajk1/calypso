@@ -9,12 +9,12 @@ namespace Calypso
 {
     internal static class DBUtilities
     {
-        static Dictionary<string, List<ImageData>> tagIndex = new();
-        public static void SearchByTags(string searchTextRaw, bool randomize, int upperLimit)
+        public static Dictionary<string, List<ImageData>> tagIndex = new();
+        public static void Search(string searchTextRaw, bool randomize, int upperLimit)
         {
             List<ImageData> results = new();
-            string[] tagsInclude;
-            string[] tagsExclude;
+            string[] tagsInclude = { };
+            string[] tagsExclude = { };
 
             string stripped = new string(searchTextRaw.Where(c => !char.IsWhiteSpace(c)).ToArray());
             stripped = stripped.ToLower();
@@ -26,6 +26,21 @@ namespace Calypso
             else if (stripped == "untagged")
             {
                 results = Database.i.dbUntaggedImageData;
+            }
+            else if (stripped == "randtag" || stripped == "rtag" || stripped == "randomtag")
+            {
+                var random = new Random();
+
+                if (!(Database.i.tagDict.Count > 0)) 
+                {
+                    Gallery.Populate(results); // return empty
+                }
+                else
+                {
+                    string randTag = Database.i.tagDict.ElementAt(random.Next(Database.i.tagDict.Count)).Key;
+                    results = FilterByTags(new string[] { randTag }, tagsExclude, randomize, upperLimit);
+                }
+
             }
             else
             {
@@ -118,6 +133,5 @@ namespace Calypso
 
             return filenameIndex;
         }
-
     }
 }

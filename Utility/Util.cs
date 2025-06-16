@@ -10,6 +10,11 @@ namespace Calypso
 {
     internal class Util
     {
+        public static void ShowErrorDialog(string message)
+        {
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
         public static string[] GetAllImageFilepaths(string path)
         {
            return System.IO.Directory.GetFiles(path, "*.*")

@@ -19,6 +19,9 @@ namespace Calypso
         string librariesFilePath;
         public List<ImageData> loadedImageDataDatabase = new();
         public List<ImageData> dbUntaggedImageData = new();
+
+        public Dictionary<string, int> tagDict = new();
+        private string currentLoadedDBJson;
         public static Database i { get; private set; }
         MainWindow mainW;
         public Database(MainWindow mainW)
@@ -32,13 +35,14 @@ namespace Calypso
             ImageInfoPanel.Init(mainW);
             Searchbar.Init(mainW);
 
+            TagEditManager.Init(mainW);
+
             new LayoutManager(mainW);
             LayoutManager.i.SetLayout(LayoutManager.DefaultLayout);
 
             Start();
         }
 
-        // needs to store library list.. that's it?  
         public void Start()
         {
             string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -49,7 +53,7 @@ namespace Calypso
             {
                 Directory.CreateDirectory(appDataPath);
             }
-            else // in theory this would prompt you to designate a directory but 
+            else // in theory this would prompt you to designate a directory but whatever
             {
                 if (!File.Exists(librariesFilePath))
                 {
@@ -70,49 +74,39 @@ namespace Calypso
 
             }
         }
-        public void LoadLibrary()
+        public void RefreshLibrary()
         {
             LoadLibrary(loadedLibraries[currentLibrary]);
         }
         private void LoadLibrary(LibraryDataStruct library)
         {
-            // check for thumbnails
-            //GalleryManager.Populate(library.DirectoryPath);
             string pathThumbnailDir = Path.Combine(library.DirectoryPath, "thumbnails");
-
             string pathDatabaseDirectory = Path.Combine(library.DirectoryPath, "database");
-            string pathDatabaseJson = Path.Combine(pathDatabaseDirectory, "database.json");
-
-            // deserialize the database, which is a fat List<ImageData>.
-            // then check if every image in the library has an entry in the list, by matching the filename to the filename property of each ImageData.
-            // ones that don't meet this requirement are added to a collection, where they will be iterated through and ImageData created for them. They will not have any tags associated with them. A thumbnail needs to be generated for each of them. 
+            currentLoadedDBJson = Path.Combine(pathDatabaseDirectory, "database.json");
 
             ImageData[] unregisteredImages;
             List<string> unregisteredImagesList = new List<string>();
+            string[] allImageFiles = Util.GetAllImageFilepaths(library.DirectoryPath);
+
             loadedImageDataDatabase.Clear();
 
-            // create databse directory if dne. in either case, gather a list of unregistered images.
             if (Directory.Exists(pathDatabaseDirectory))
             {
-                // read from the file. If the database directory exists then database.json is presumed to exist.
-                loadedImageDataDatabase = Util.DeserializeFromFile<List<ImageData>>(pathDatabaseJson);
-                Dictionary<string, ImageData> dict = DBUtilities.GenerateFilenameDict(loadedImageDataDatabase);
+                loadedImageDataDatabase = Util.DeserializeFromFile<List<ImageData>>(currentLoadedDBJson);
 
-                string[] allImageFiles = Util.GetAllImageFilepaths(library.DirectoryPath);
+                Dictionary<string, ImageData> fileNameDict = DBUtilities.GenerateFilenameDict(loadedImageDataDatabase);
 
                 foreach (string filepath in allImageFiles)
                 {
-                    if (!dict.ContainsKey(Path.GetFileName(filepath)))
+                    if (!fileNameDict.ContainsKey(Path.GetFileName(filepath)))
                     {
                         unregisteredImagesList.Add(filepath); // add all filenames that aren't registered in the database to a list
                     }
                 }
-
             }
             else
             {
                 Directory.CreateDirectory(pathDatabaseDirectory);
-                string[] allImageFiles = Util.GetAllImageFilepaths(library.DirectoryPath);
                 foreach (string file in allImageFiles)
                 {
                     unregisteredImagesList.Add(file);
@@ -135,41 +129,39 @@ namespace Calypso
                 thumb.Save(thumbSavePath, format);
 
                 // register to db
-                loadedImageDataDatabase.Add(new ImageData()
-                {
-                    FullResPath = filepath,
-                    ThumbnailPath = thumbSavePath,
-                    Filename = filename,
-                    Tags = new()
-                });
+                loadedImageDataDatabase.Add(new ImageData(filepath, thumbSavePath, filename));
             }
 
             DBUtilities.GenerateTagDict(loadedImageDataDatabase);
+            Util.SerializeToFile<List<ImageData>>(loadedImageDataDatabase, currentLoadedDBJson); // save potential new images to file
 
-            Util.SerializeToFile<List<ImageData>>(loadedImageDataDatabase, pathDatabaseJson); // save potential new images to file
-
-            foreach (ImageData entry in  loadedImageDataDatabase)
-            {
-                if (entry.Tags.Count > 0)
-                {
-                    foreach (string item in entry.Tags)
-                        Debug.WriteLine($"{entry.Filename} : {item}");
-                }
-                else
-                    Debug.WriteLine("no tags found");
-            }
-
-            CollateTagCount(loadedImageDataDatabase);
+            BuildTagDict();
             Searchbar.Search("all");
         }
-        private void CollateTagCount(List<ImageData> db)
+        public void RemoveTag(string tag)
+        {
+            if (!DBUtilities.tagIndex.ContainsKey(tag)) return;
+
+            foreach (ImageData imgData in DBUtilities.tagIndex[tag])
+            {
+                imgData.Tags.Remove(tag);
+            }
+            BuildTagDict();
+        }
+        public void RefreshAndSaveDatabase()
+        {
+            BuildTagDict();
+            DBUtilities.GenerateTagDict(loadedImageDataDatabase);
+            Util.SerializeToFile<List<ImageData>>(loadedImageDataDatabase, currentLoadedDBJson);
+        }
+        private void BuildTagDict()
         {
             dbUntaggedImageData.Clear();
+            tagDict.Clear();
 
-            Dictionary<string, int> tagCounts = new();
-            int totalEntriesCount = db.Count;
+            int totalEntriesCount = loadedImageDataDatabase.Count;
 
-            foreach (ImageData entry in db)
+            foreach (ImageData entry in loadedImageDataDatabase)
             {
                 if (entry.Tags.Count == 0)
                 {
@@ -179,14 +171,18 @@ namespace Calypso
 
                 foreach (string tag in entry.Tags)
                 {
-                    if (tagCounts.ContainsKey(tag))
-                        tagCounts[tag]++;
+                    if (tagDict.ContainsKey(tag))
+                        tagDict[tag]++;
                     else
-                        tagCounts[tag] = 1;
+                        tagDict[tag] = 1;
                 }
             }
 
-            TagTreesPanel.Populate(tagCounts, dbUntaggedImageData.Count, totalEntriesCount);
+            //alphabetize
+            tagDict = tagDict.OrderBy(kvp => kvp.Key)
+                         .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            TagTreesPanel.Populate(tagDict, dbUntaggedImageData.Count, totalEntriesCount);
         }
         public void OpenSourceFolder()
         {
@@ -211,5 +207,9 @@ namespace Calypso
             }
         }
 
+        public LibraryDataStruct GetCurrentLibrary()
+        {
+            return loadedLibraries[currentLibrary];
+        }
     }
 }

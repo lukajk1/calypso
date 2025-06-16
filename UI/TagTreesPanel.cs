@@ -20,14 +20,14 @@ namespace Calypso
             TagTreesPanel.tree = mainW.tagTree;
         }
 
-        public static void Populate(Dictionary<string, int> tagCounts, int untaggedEntriesCount, int totalEntriesCount)
+        public static void Populate(Dictionary<string, int> tagData, int untaggedEntriesCount, int totalEntriesCount)
         {
             tree.Nodes.Clear();
 
             tree.NodeMouseClick -= OnTagNodeClick; // Remove if already attached
             tree.NodeMouseClick += OnTagNodeClick; // Attach handler
 
-            foreach (KeyValuePair<string, int> kvp in tagCounts)
+            foreach (KeyValuePair<string, int> kvp in tagData)
             {
                 TreeNode node = new TreeNode($"#{kvp.Key} ({kvp.Value.ToString()})");
 
@@ -40,6 +40,9 @@ namespace Calypso
 
             TreeNode nodeAll = tree.Nodes.Insert(0, $"All Images ({totalEntriesCount.ToString()})");
             nodeAll.Tag = "all";
+
+            TreeNode nodeRand = tree.Nodes.Insert(0, "Random Tag");
+            nodeRand.Tag = "rtag";
         }
 
         private static void OnTagNodeClick(object sender, TreeNodeMouseClickEventArgs e)

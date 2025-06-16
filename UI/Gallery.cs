@@ -8,6 +8,8 @@ using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
 using System.Data;
+using Calypso.UI;
+using MetadataExtractor;
 namespace Calypso
 {
     internal class Gallery
@@ -16,6 +18,9 @@ namespace Calypso
         static ContextMenuStrip? imageContextMenuStrip; 
         static MainWindow? mainW;
         static PictureBox? pictureBoxPreview;
+
+        static List<ImageData> lastResults = new();
+        static List<TileTag> selectedTiles = new();
 
         private static float _loadProgress = 0f;
         public static float LoadProgress
@@ -66,6 +71,7 @@ namespace Calypso
 
         public static void Populate(List<ImageData> results)
         {
+            lastResults = results;
             ClearExistingControls();
             GenerateContent(results);
         }
@@ -124,21 +130,11 @@ namespace Calypso
         //}
         private static void GenerateContent(List<ImageData> content)
         {
-            Debug.WriteLine("displaying " +content.Count +" results");
             float processedCount = 0f;
             foreach (ImageData imageData in content)
             {
-                PictureBox pb = new PictureBox
-                {
-                    SizeMode = PictureBoxSizeMode.Zoom,
-                    Size = new Size(GlobalValues.ThumbnailHeight, GlobalValues.ThumbnailHeight),
-                    Image = Image.FromFile(imageData.ThumbnailPath),
-                    Margin = new Padding(5),
-                    Tag = imageData
-                };
 
-                pb.DoubleClick += PictureBox_DoubleClick;
-                pb.Click += PictureBox_Click;
+
 
                 Label label = new Label
                 {
@@ -154,10 +150,29 @@ namespace Calypso
                 {
                     Width = GlobalValues.ThumbnailHeight + 10,
                     Height = GlobalValues.ThumbnailHeight + 30,
-                    Margin = new Padding(5), 
-                    BackColor = Color.DarkGray
+                    Margin = new Padding(5)
                 };
 
+                PictureBox pb = new PictureBox
+                {
+                    Cursor = Cursors.Hand,
+                    SizeMode = PictureBoxSizeMode.Zoom,
+                    Size = new Size(GlobalValues.ThumbnailHeight, GlobalValues.ThumbnailHeight),
+                    Image = Image.FromFile(imageData.ThumbnailPath),
+                    Margin = new Padding(5)
+                };
+
+                TileTag tileTag = new TileTag
+                {
+                    _ImageData = imageData,
+                    _Container = container,
+                    _PictureBox = pb
+                };
+
+                pb.Tag = tileTag;
+
+                pb.DoubleClick += PictureBox_DoubleClick;
+                pb.MouseClick += PictureBox_MouseClick;
                 AddDraggableHandlers(pb);
 
                 pb.Dock = DockStyle.Top;
@@ -196,7 +211,7 @@ namespace Calypso
         private static void flowLayoutGallery_DragDrop(object sender, DragEventArgs e)
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            string targetDir = @"C:\Users\lukaj\OneDrive\Desktop\New folder (2)";
+            string targetDir = Database.i.GetCurrentLibrary().DirectoryPath;
 
             foreach (string file in files)
             {
@@ -204,10 +219,16 @@ namespace Calypso
                 if (ext is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".gif")
                 {
                     string destPath = Path.Combine(targetDir, Path.GetFileName(file));
-                    File.Copy(file, destPath, overwrite: false);
+
+                    if (!File.Exists(destPath))
+                        File.Copy(file, destPath, overwrite: false);
+                    else
+                        Util.ShowErrorDialog($"A file named {Path.GetFileName(file)} already exists in {targetDir}!");
                 }
             }
         }
+
+        const int DragThreshold = 17; // (px) less sensitive than system default to avoid false positives more 
         private static void AddDraggableHandlers(PictureBox pb)
         {
             Point dragStartPoint = Point.Empty;
@@ -222,50 +243,78 @@ namespace Calypso
             {
                 if (e.Button == MouseButtons.Left &&
                     dragStartPoint != Point.Empty &&
-                    (Math.Abs(e.X - dragStartPoint.X) > SystemInformation.DragSize.Width / 2 ||
-                     Math.Abs(e.Y - dragStartPoint.Y) > SystemInformation.DragSize.Height / 2))
+                    (Math.Abs(e.X - dragStartPoint.X) > DragThreshold ||
+                     Math.Abs(e.Y - dragStartPoint.Y) > DragThreshold))
                 {
-                    if (pb.Tag is string imagePath && File.Exists(imagePath))
+                    if (pb.Tag is TileTag tTag && File.Exists(tTag._ImageData.FullResPath))
                     {
-                        pb.DoDragDrop(new DataObject(DataFormats.FileDrop, new string[] { imagePath }), DragDropEffects.Copy);
-                        dragStartPoint = Point.Empty; // reset
+                        pb.DoDragDrop(
+                            new DataObject(DataFormats.FileDrop, new string[] { tTag._ImageData.FullResPath }),
+                            DragDropEffects.Copy);
+                        dragStartPoint = Point.Empty;
                     }
                 }
             };
         }
 
-        public static void RightClick(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                imageContextMenuStrip.Show(e.Location);
-            }
-        }
 
 
         private static void PictureBox_DoubleClick(object? sender, EventArgs e)
         {
-            if (sender is PictureBox pb && pb.Tag is string imagePath && File.Exists(imagePath))
+            if (sender is PictureBox pb && pb.Tag is TileTag tTag && File.Exists(tTag._ImageData.FullResPath))
             {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = imagePath,
+                    FileName = tTag._ImageData.FullResPath,
                     UseShellExecute = true
                 });
             }
         }
-        private static void PictureBox_Click(object? sender, EventArgs e)
+        private static void PictureBox_MouseClick(object sender, MouseEventArgs e)
         {
-            if (sender is PictureBox clickedPictureBox)
+            if (sender is not PictureBox pb || pb.Tag is not TileTag tTag)
+                return;
+
+            bool shiftHeld = (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
+
+            if (!shiftHeld) ClearSelectionList();
+            AddToSelection(tTag);
+
+            if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
             {
-                //pictureBoxPreview.Image = clickedPictureBox.Image;
-                ImageInfoPanel.Load(clickedPictureBox);
+                ImageInfoPanel.Display(tTag._ImageData);
+                tTag._Container.BorderStyle = BorderStyle.FixedSingle;
+            }
+
+            if (e.Button == MouseButtons.Right && File.Exists(tTag._ImageData.FullResPath))
+            {
+                TagEditManager.Open(selectedTiles);
             }
         }
 
+        public static void OpenTagEditorByCommand()
+        {
+            if (selectedTiles.Count > 0)
+            {
+                TagEditManager.Open(selectedTiles);
+            }
+        }
 
+        private static void ClearSelectionList()
+        {
+            foreach (TileTag tTag in selectedTiles)
+            {
+                tTag._Container.BorderStyle = BorderStyle.None;
+            }
 
+            selectedTiles.Clear();
+        }
 
+        private static void AddToSelection(TileTag tTag)
+        {
+            selectedTiles.Add(tTag);
+            tTag._Container.BorderStyle = BorderStyle.FixedSingle;
+        }
 
     }
 }

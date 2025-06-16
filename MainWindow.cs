@@ -1,4 +1,5 @@
 using Calypso.UI;
+using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
 
@@ -10,32 +11,52 @@ namespace Calypso
         public MainWindow()
         {
             InitializeComponent();
+            this.KeyPreview = true;
 
             new Database(this);
-
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            Control focused = Form.ActiveForm?.ActiveControl;
+
+            bool searchBoxFocused = focused == searchBox;
+            Debug.WriteLine(focused.Name);
             // single key shortcuts --------------------------------------------------------------------------------
             if (keyData == Keys.R)
             {
-                LayoutManager.i.TogglePanel(tagTreeGallerySplitContainer, 1);
-                return true; // suppress further handling
+                if (!searchBox.ContainsFocus)
+                {
+                    LayoutManager.i.TogglePanel(tagTreeGallerySplitContainer, 1);
+                    return true; // suppress further handling
+                }
+
             }
             else if (keyData == Keys.N)
             {
-                LayoutManager.i.TogglePanel(masterSplitContainer, 2);
-                return true;
+                if (!searchBox.ContainsFocus)
+                {
+                    LayoutManager.i.TogglePanel(masterSplitContainer, 2);
+                    return true;
+                }
             }
             else if (keyData == Keys.I)
             {
-                //MessageBox.Show("recieved");
-                LayoutManager.i.TogglePanel(imageInfoHorizontalSplitContainer, 2);
-                return true;
+                if (!searchBox.ContainsFocus)
+                {
+                    LayoutManager.i.TogglePanel(imageInfoHorizontalSplitContainer, 2);
+                    return true;
+                }
             }
-
-            // ctrl shortcuts --------------------------------------------------------------------------------
+            else if (keyData == Keys.T)
+            {
+                if (!searchBox.ContainsFocus)
+                {
+                    Gallery.OpenTagEditorByCommand();
+                    return true;
+                }
+            }
+                // ctrl shortcuts --------------------------------------------------------------------------------
             if (keyData == (Keys.Control | Keys.Q))
             {
                 Close();
@@ -43,13 +64,12 @@ namespace Calypso
             }
             else if (keyData == (Keys.Control | Keys.L))
             {
-                Control focused = Form.ActiveForm?.ActiveControl;
+                
 
                 if (focused == searchBox)
                 {
-
-                    // Move focus to next focusable control
-                    SelectNextControl(ActiveControl, true, true, true, true);
+                    // focus the tagtree I guess. just has to move focus off the searchbar
+                    tagTree.Focus();
                 }
                 else
                     searchBox.Focus();
@@ -102,7 +122,7 @@ namespace Calypso
 
         private void OpenTagModifier()
         {
-            TagModifier tagM = new TagModifier(this);
+            TagEditor tagM = new TagEditor(this);
             tagM.Show();
 
         }
@@ -127,7 +147,7 @@ namespace Calypso
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string message = "Calypso Image Manager v1.0.0\nSupported file types: .jpg, .jpeg, .png, .bmp, .gif\nCreated by lukajk";
-            string title = "About";
+            string title = "About Calypso";
             MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 

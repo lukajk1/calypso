@@ -68,7 +68,7 @@
             comboBox1 = new ComboBox();
             checkBoxRandomize = new CheckBox();
             tableLayoutImageInfo = new TableLayoutPanel();
-            button1 = new Button();
+            buttonOpenTagEditor = new Button();
             pictureBoxImagePreview = new PictureBox();
             middleFillPanelContainer = new Panel();
             tagTreeGallerySplitContainer = new SplitContainer();
@@ -77,7 +77,7 @@
             imageInfoHorizontalSplitContainer = new SplitContainer();
             imageMetadataPanel = new Panel();
             panel1 = new Panel();
-            button2 = new Button();
+            buttonRandomImage = new Button();
             masterSplitContainer = new SplitContainer();
             masterPanelWrapper = new Panel();
             menuStrip1.SuspendLayout();
@@ -238,15 +238,15 @@
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new Size(107, 22);
-            aboutToolStripMenuItem.Text = "&About";
+            aboutToolStripMenuItem.Size = new Size(152, 22);
+            aboutToolStripMenuItem.Text = "&About Calypso";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
             // flowLayoutGallery
             // 
             flowLayoutGallery.AutoScroll = true;
             flowLayoutGallery.AutoSize = true;
-            flowLayoutGallery.BackColor = SystemColors.ControlLight;
+            flowLayoutGallery.BackColor = SystemColors.ControlDark;
             flowLayoutGallery.BorderStyle = BorderStyle.FixedSingle;
             flowLayoutGallery.Dock = DockStyle.Fill;
             flowLayoutGallery.Location = new Point(0, 53);
@@ -410,15 +410,15 @@
             tableLayoutImageInfo.Size = new Size(354, 56);
             tableLayoutImageInfo.TabIndex = 3;
             // 
-            // button1
+            // buttonOpenTagEditor
             // 
-            button1.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-            button1.Location = new Point(9, 20);
-            button1.Name = "button1";
-            button1.Size = new Size(180, 30);
-            button1.TabIndex = 0;
-            button1.Text = "[T] Open Tag Editor";
-            button1.UseVisualStyleBackColor = true;
+            buttonOpenTagEditor.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            buttonOpenTagEditor.Location = new Point(9, 20);
+            buttonOpenTagEditor.Name = "buttonOpenTagEditor";
+            buttonOpenTagEditor.Size = new Size(131, 30);
+            buttonOpenTagEditor.TabIndex = 0;
+            buttonOpenTagEditor.Text = "[T] Open Tag Editor";
+            buttonOpenTagEditor.UseVisualStyleBackColor = true;
             // 
             // pictureBoxImagePreview
             // 
@@ -520,8 +520,8 @@
             // panel1
             // 
             panel1.BackColor = SystemColors.Control;
-            panel1.Controls.Add(button2);
-            panel1.Controls.Add(button1);
+            panel1.Controls.Add(buttonRandomImage);
+            panel1.Controls.Add(buttonOpenTagEditor);
             panel1.Dock = DockStyle.Bottom;
             panel1.Location = new Point(0, 201);
             panel1.Name = "panel1";
@@ -529,15 +529,15 @@
             panel1.Size = new Size(354, 59);
             panel1.TabIndex = 1;
             // 
-            // button2
+            // buttonRandomImage
             // 
-            button2.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-            button2.Location = new Point(113, 20);
-            button2.Name = "button2";
-            button2.Size = new Size(180, 30);
-            button2.TabIndex = 1;
-            button2.Text = "Random Image";
-            button2.UseVisualStyleBackColor = true;
+            buttonRandomImage.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            buttonRandomImage.Location = new Point(146, 20);
+            buttonRandomImage.Name = "buttonRandomImage";
+            buttonRandomImage.Size = new Size(98, 30);
+            buttonRandomImage.TabIndex = 1;
+            buttonRandomImage.Text = "Random Image";
+            buttonRandomImage.UseVisualStyleBackColor = true;
             // 
             // masterSplitContainer
             // 
@@ -654,13 +654,13 @@
         public SplitContainer tagTreeGallerySplitContainer;
         public SplitContainer imageInfoHorizontalSplitContainer;
         public SplitContainer masterSplitContainer;
-        public Button button1;
+        public Button buttonOpenTagEditor;
         public SplitContainer horizontalLeftSplitContainer;
         public TreeView savedSearchesTreeView;
         public Panel masterPanelWrapper;
         public Panel panel1;
         public Panel imageMetadataPanel;
-        public Button button2;
+        public Button buttonRandomImage;
         private ToolStripMenuItem toolStripMenuItem7;
         private ComboBox comboBox1;
         private ToolStripMenuItem toolStripMenuItem8;

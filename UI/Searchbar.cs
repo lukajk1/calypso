@@ -18,7 +18,7 @@ namespace Calypso.UI
         public static void Search(string text)
         {
             mainW.searchBox.Text = text;
-            DBUtilities.SearchByTags(text, mainW.checkBoxRandomize.Checked, 25);
+            DBUtilities.Search(text, mainW.checkBoxRandomize.Checked, 25);
         }
     }
 }
