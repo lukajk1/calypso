@@ -29,17 +29,6 @@ namespace Calypso
             i = this;
             this.mainW = mainW;
 
-            Gallery.Init(mainW);
-            StatusBar.Init(mainW);
-            TagTreesPanel.Init(mainW);
-            ImageInfoPanel.Init(mainW);
-            Searchbar.Init(mainW);
-
-            TagEditManager.Init(mainW);
-
-            new LayoutManager(mainW);
-            LayoutManager.i.SetLayout(LayoutManager.DefaultLayout);
-
             Start();
         }
 
@@ -132,11 +121,26 @@ namespace Calypso
                 loadedImageDataDatabase.Add(new ImageData(filepath, thumbSavePath, filename));
             }
 
-            DBUtilities.GenerateTagDict(loadedImageDataDatabase);
-            Util.SerializeToFile<List<ImageData>>(loadedImageDataDatabase, currentLoadedDBJson); // save potential new images to file
+            RefreshAndSaveDatabase();
+        }
+        public void DeleteImageData(List<ImageData> imgDataList)
+        {
+            foreach (ImageData imgData in imgDataList)
+            {
+                loadedImageDataDatabase.Remove(imgData);
 
-            BuildTagDict();
-            Searchbar.Search("all");
+                if (File.Exists(imgData.ThumbnailPath))
+                {
+                    File.Delete(imgData.ThumbnailPath);
+                }
+
+                if (File.Exists(imgData.FullResPath))
+                {
+                    File.Delete(imgData.FullResPath);
+                }
+            }
+
+            RefreshAndSaveDatabase();
         }
         public void RemoveTag(string tag)
         {
@@ -182,7 +186,7 @@ namespace Calypso
             tagDict = tagDict.OrderBy(kvp => kvp.Key)
                          .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-            TagTreesPanel.Populate(tagDict, dbUntaggedImageData.Count, totalEntriesCount);
+            TreesPanel.Populate(tagDict, dbUntaggedImageData.Count, totalEntriesCount);
         }
         public void OpenSourceFolder()
         {

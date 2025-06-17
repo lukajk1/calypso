@@ -11,9 +11,9 @@ namespace Calypso
 
         public static LayoutData DefaultLayout = new LayoutData()
         {
-            MetadataVSplitter_Ratio = 0.67f,
+            MetadataVSplitter_Ratio = 0.76f,
             LeftPanelHSplitter_Ratio = 0.2f,
-            RightPanelHSplitter_Ratio = 0.67f,
+            RightPanelHSplitter_Ratio = 0.65f,
             Metadata_IsOpen = true,
             LeftPanel_IsOpen = true,
             RightPanel_IsOpen = true

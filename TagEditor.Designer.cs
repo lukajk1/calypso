@@ -136,7 +136,7 @@
         private StatusStrip statusStrip1;
         private Panel panel1;
         public Button buttonAddTag;
-        private TextBox newTagTextBox;
+        public TextBox newTagTextBox;
         private Label label1;
         private Panel panel2;
     }

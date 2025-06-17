@@ -38,18 +38,26 @@ namespace Calypso
                 else
                 {
                     string randTag = Database.i.tagDict.ElementAt(random.Next(Database.i.tagDict.Count)).Key;
-                    results = FilterByTags(new string[] { randTag }, tagsExclude, randomize, upperLimit);
+                    Searchbar.Search(randTag); 
+                    return;
                 }
 
             }
             else
             {
                 ParseQuery(stripped, out tagsInclude, out tagsExclude);
-                results = FilterByTags(tagsInclude, tagsExclude, randomize, upperLimit);
+                results = FilterByTags(tagsInclude, tagsExclude);
+            }
 
-                //Debug.WriteLine($"results: {results.Count}");
-                //Debug.WriteLine($"tag include: {string.Join(", ", tagsInclude)}");
-                //Debug.WriteLine($"tag exclude: {string.Join(", ", tagsExclude)}");
+            if (randomize)
+            {
+                var rng = new Random();
+                results = results.OrderBy(_ => rng.Next()).ToList();
+            }
+
+            if (upperLimit > 0 && upperLimit < results.Count)
+            {
+                results = results.Take(upperLimit).ToList();
             }
 
             Gallery.Populate(results);
@@ -73,7 +81,7 @@ namespace Calypso
             tagExclude = excludeList.ToArray();
         }
 
-        public static List<ImageData> FilterByTags(string[] tagInclude, string[] tagExclude, bool returnRandom, int resultsUpperLimit = 0)
+        public static List<ImageData> FilterByTags(string[] tagInclude, string[] tagExclude)
         {
             var result = tagInclude
                 .Where(tag => tagIndex.ContainsKey(tag))
@@ -87,17 +95,6 @@ namespace Calypso
                 result = result
                     .Where(img => img.Tags.All(t => !excludeSet.Contains(t)))
                     .ToList();
-            }
-
-            if (returnRandom)
-            {
-                var rng = new Random();
-                result = result.OrderBy(_ => rng.Next()).ToList();
-            }
-
-            if (resultsUpperLimit > 0 && resultsUpperLimit < result.Count)
-            {
-                result = result.Take(resultsUpperLimit).ToList();
             }
 
             return result;

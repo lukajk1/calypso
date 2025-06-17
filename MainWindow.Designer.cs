@@ -53,8 +53,9 @@
             searchBox = new TextBox();
             statusStrip1 = new StatusStrip();
             toolStripProgressBar1 = new ToolStripProgressBar();
-            toolStripStatusLabelImageCount = new ToolStripStatusLabel();
+            statusLabelResultsCount = new ToolStripStatusLabel();
             toolStripLabelThumbnailSize = new ToolStripStatusLabel();
+            selectedCountLabel = new ToolStripStatusLabel();
             BottomToolStripPanel = new ToolStripPanel();
             TopToolStripPanel = new ToolStripPanel();
             RightToolStripPanel = new ToolStripPanel();
@@ -65,7 +66,7 @@
             item2ToolStripMenuItem = new ToolStripMenuItem();
             tagTree = new TreeView();
             searchPanel = new Panel();
-            comboBox1 = new ComboBox();
+            comboBoxResultsNum = new ComboBox();
             checkBoxRandomize = new CheckBox();
             tableLayoutImageInfo = new TableLayoutPanel();
             buttonOpenTagEditor = new Button();
@@ -261,14 +262,14 @@
             searchBox.BorderStyle = BorderStyle.FixedSingle;
             searchBox.Location = new Point(16, 14);
             searchBox.Name = "searchBox";
-            searchBox.Size = new Size(389, 23);
+            searchBox.Size = new Size(333, 23);
             searchBox.TabIndex = 11;
             searchBox.KeyDown += textBox1_KeyDown;
             // 
             // statusStrip1
             // 
             statusStrip1.BackColor = SystemColors.Control;
-            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripProgressBar1, toolStripStatusLabelImageCount, toolStripLabelThumbnailSize });
+            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripProgressBar1, statusLabelResultsCount, toolStripLabelThumbnailSize, selectedCountLabel });
             statusStrip1.Location = new Point(0, 839);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new Size(1384, 22);
@@ -280,19 +281,27 @@
             toolStripProgressBar1.Name = "toolStripProgressBar1";
             toolStripProgressBar1.Size = new Size(100, 16);
             // 
-            // toolStripStatusLabelImageCount
+            // statusLabelResultsCount
             // 
-            toolStripStatusLabelImageCount.Name = "toolStripStatusLabelImageCount";
-            toolStripStatusLabelImageCount.Padding = new Padding(15, 0, 0, 0);
-            toolStripStatusLabelImageCount.Size = new Size(107, 17);
-            toolStripStatusLabelImageCount.Text = "Image Count: --";
-            toolStripStatusLabelImageCount.TextAlign = ContentAlignment.MiddleLeft;
+            statusLabelResultsCount.Name = "statusLabelResultsCount";
+            statusLabelResultsCount.Padding = new Padding(15, 0, 0, 0);
+            statusLabelResultsCount.Size = new Size(75, 17);
+            statusLabelResultsCount.Text = "Results: --";
+            statusLabelResultsCount.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // toolStripLabelThumbnailSize
             // 
+            toolStripLabelThumbnailSize.Margin = new Padding(0, 3, 10, 2);
             toolStripLabelThumbnailSize.Name = "toolStripLabelThumbnailSize";
             toolStripLabelThumbnailSize.Size = new Size(132, 17);
             toolStripLabelThumbnailSize.Text = "Thumbnail Height: --px";
+            // 
+            // selectedCountLabel
+            // 
+            selectedCountLabel.Margin = new Padding(0, 3, 10, 2);
+            selectedCountLabel.Name = "selectedCountLabel";
+            selectedCountLabel.Size = new Size(67, 17);
+            selectedCountLabel.Text = "Selected: --";
             // 
             // BottomToolStripPanel
             // 
@@ -361,7 +370,7 @@
             // 
             searchPanel.BackColor = SystemColors.ControlLight;
             searchPanel.BorderStyle = BorderStyle.FixedSingle;
-            searchPanel.Controls.Add(comboBox1);
+            searchPanel.Controls.Add(comboBoxResultsNum);
             searchPanel.Controls.Add(checkBoxRandomize);
             searchPanel.Controls.Add(searchBox);
             searchPanel.Dock = DockStyle.Top;
@@ -370,19 +379,20 @@
             searchPanel.Size = new Size(705, 53);
             searchPanel.TabIndex = 12;
             // 
-            // comboBox1
+            // comboBoxResultsNum
             // 
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Items.AddRange(new object[] { "All", "25", "50" });
-            comboBox1.Location = new Point(440, 29);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(66, 23);
-            comboBox1.TabIndex = 13;
+            comboBoxResultsNum.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBoxResultsNum.FormattingEnabled = true;
+            comboBoxResultsNum.Items.AddRange(new object[] { "All", "25", "50" });
+            comboBoxResultsNum.Location = new Point(446, 14);
+            comboBoxResultsNum.Name = "comboBoxResultsNum";
+            comboBoxResultsNum.Size = new Size(51, 23);
+            comboBoxResultsNum.TabIndex = 13;
             // 
             // checkBoxRandomize
             // 
             checkBoxRandomize.AutoSize = true;
-            checkBoxRandomize.Location = new Point(440, 15);
+            checkBoxRandomize.Location = new Point(355, 15);
             checkBoxRandomize.Name = "checkBoxRandomize";
             checkBoxRandomize.Size = new Size(85, 19);
             checkBoxRandomize.TabIndex = 12;
@@ -627,7 +637,7 @@
         public ToolStripPanel RightToolStripPanel;
         public ToolStripPanel LeftToolStripPanel;
         public ToolStripContentPanel ContentPanel;
-        public ToolStripStatusLabel toolStripStatusLabelImageCount;
+        public ToolStripStatusLabel statusLabelResultsCount;
         public ContextMenuStrip imageContextMenuStrip;
         public ToolStripMenuItem item1ToolStripMenuItem;
         public ToolStripMenuItem item2ToolStripMenuItem;
@@ -661,10 +671,11 @@
         public Panel panel1;
         public Panel imageMetadataPanel;
         public Button buttonRandomImage;
-        private ToolStripMenuItem toolStripMenuItem7;
-        private ComboBox comboBox1;
-        private ToolStripMenuItem toolStripMenuItem8;
-        private ToolStripMenuItem toolStripMenuItem9;
-        private ToolStripMenuItem toolStripMenuItem1;
+        public ToolStripMenuItem toolStripMenuItem7;
+        public ComboBox comboBoxResultsNum;
+        public ToolStripMenuItem toolStripMenuItem8;
+        public ToolStripMenuItem toolStripMenuItem9;
+        public ToolStripMenuItem toolStripMenuItem1;
+        public ToolStripStatusLabel selectedCountLabel;
     }
 }

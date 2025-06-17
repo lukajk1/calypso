@@ -18,8 +18,10 @@ namespace Calypso
         static ContextMenuStrip? imageContextMenuStrip; 
         static MainWindow? mainW;
         static PictureBox? pictureBoxPreview;
+        static ToolStripStatusLabel? selectedCountLabel;
+        static ToolStripStatusLabel? resultsCountLabel;
 
-        static List<ImageData> lastResults = new();
+        static List<ImageData> lastSearch = new();
         static List<TileTag> selectedTiles = new();
 
         private static float _loadProgress = 0f;
@@ -44,97 +46,27 @@ namespace Calypso
             Gallery.flowLayoutGallery = mainW.flowLayoutGallery;
             Gallery.imageContextMenuStrip = mainW.imageContextMenuStrip;  
             Gallery.pictureBoxPreview = mainW.pictureBoxImagePreview;
+            Gallery.selectedCountLabel = mainW.selectedCountLabel;
+            Gallery.resultsCountLabel = mainW.statusLabelResultsCount;
 
             flowLayoutGallery.AllowDrop = true;
             flowLayoutGallery.DragEnter += flowLayoutGallery_DragEnter;
             flowLayoutGallery.DragDrop += flowLayoutGallery_DragDrop;
         }
 
-
-        //public static void Populate(string directoryPath)
-        //{
-        //    ClearExistingControls();
-
-        //    if (!System.IO.Directory.Exists(directoryPath))
-        //    {
-        //        MessageBox.Show("invalid directory!");
-        //        return;
-        //    }
-
-        //    string[] imageFiles = Util.GetAllImageFilepaths(directoryPath);
-
-        //    StatusBar.ImagesLoaded = imageFiles.Length;
-        //    GalleryManager.mainW.toolStripLabelThumbnailSize.Text = $"Thumbnail Height: {GlobalValues.ThumbnailHeight}px";
-
-        //    GenerateContent(imageFiles);
-        //}
-
         public static void Populate(List<ImageData> results)
         {
-            lastResults = results;
+            lastSearch = results;
             ClearExistingControls();
             GenerateContent(results);
+
+            resultsCountLabel.Text = $"Results: {results.Count}";
         }
-
-        //private static void GenerateContent(string[] imageFiles)
-        //{
-        //    float processedCount = 0f;
-        //    foreach (string file in imageFiles)
-        //    {
-        //        Image thumbnail = Util.CreateThumbnail(file, GlobalValues.ThumbnailHeight);
-
-        //        PictureBox pb = new PictureBox
-        //        {
-        //            SizeMode = PictureBoxSizeMode.Zoom,
-        //            Size = new Size(GlobalValues.ThumbnailHeight, GlobalValues.ThumbnailHeight),
-        //            Image = thumbnail,
-        //            Margin = new Padding(5),
-        //            Tag = file
-        //        };
-
-        //        pb.DoubleClick += PictureBox_DoubleClick;
-        //        pb.Click += PictureBox_Click;
-
-        //        Label label = new Label
-        //        {
-        //            Text = Path.GetFileName(file),
-        //            TextAlign = ContentAlignment.MiddleCenter,
-        //            Dock = DockStyle.Bottom,
-        //            AutoSize = false,
-        //            Width = GlobalValues.ThumbnailHeight,
-        //            Height = 20
-        //        };
-
-        //        Panel container = new Panel
-        //        {
-        //            Width = GlobalValues.ThumbnailHeight + 10,
-        //            Height = GlobalValues.ThumbnailHeight + 30,
-        //            Margin = new Padding(5), 
-        //            BackColor = Color.DarkGray
-        //        };
-
-        //        AddDraggableHandlers(pb);
-
-        //        pb.Dock = DockStyle.Top;
-        //        container.Controls.Add(pb);
-        //        container.Controls.Add(label);
-
-        //        flowLayoutGallery.Controls.Add(container);
-                
-        //        processedCount++;
-        //        LoadProgress = processedCount / imageFiles.Length;
-        //        thumbnail.Dispose();
-        //    }
-
-        //    LoadProgress = 0f;
-        //}
         private static void GenerateContent(List<ImageData> content)
         {
             float processedCount = 0f;
             foreach (ImageData imageData in content)
             {
-
-
 
                 Label label = new Label
                 {
@@ -200,6 +132,57 @@ namespace Calypso
                 control.Dispose(); // Dispose of the control to release its resources
             }
         }
+
+        private static void ClearSelectionList()
+        {
+            foreach (TileTag tTag in selectedTiles)
+            {
+                tTag._Container.BorderStyle = BorderStyle.None;
+            }
+
+            selectedTiles.Clear();
+        }
+
+        private static void AddToSelection(TileTag tTag)
+        {
+            selectedTiles.Add(tTag);
+            tTag._Container.BorderStyle = BorderStyle.FixedSingle;
+            selectedCountLabel.Text = $"Selected: ({selectedTiles.Count})";
+        }
+
+        public static void SelectAll()
+        {
+            foreach (Control control in flowLayoutGallery.Controls)
+            {
+                if (control is Panel panel &&
+                    panel.Controls.OfType<PictureBox>().FirstOrDefault() is PictureBox pb &&
+                    pb.Tag is TileTag tTag)
+                {
+                    AddToSelection(tTag);
+                }
+            }
+        }
+        public static void DeleteSelected()
+        {
+            foreach (TileTag t in selectedTiles)
+            {
+                if (t._Container != null && flowLayoutGallery.Controls.Contains(t._Container))
+                {
+                    flowLayoutGallery.Controls.Remove(t._Container);
+                    t._Container.Dispose();
+                }
+
+                if (t._PictureBox.Image != null)
+                {
+                    t._PictureBox.Image.Dispose();
+                }
+            }
+
+            Database.i.DeleteImageData(selectedTiles.Select(t => t._ImageData).ToList());
+
+            selectedTiles.Clear();
+        }
+
 
         // events ------------------------------------------------------------------------------------------
         private static void flowLayoutGallery_DragEnter(object sender, DragEventArgs e)
@@ -275,9 +258,9 @@ namespace Calypso
             if (sender is not PictureBox pb || pb.Tag is not TileTag tTag)
                 return;
 
-            bool shiftHeld = (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
+            bool ctrlHeld = (Control.ModifierKeys & Keys.Control) == Keys.Control;
 
-            if (!shiftHeld) ClearSelectionList();
+            if (!ctrlHeld) ClearSelectionList();
             AddToSelection(tTag);
 
             if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
@@ -298,22 +281,6 @@ namespace Calypso
             {
                 TagEditManager.Open(selectedTiles);
             }
-        }
-
-        private static void ClearSelectionList()
-        {
-            foreach (TileTag tTag in selectedTiles)
-            {
-                tTag._Container.BorderStyle = BorderStyle.None;
-            }
-
-            selectedTiles.Clear();
-        }
-
-        private static void AddToSelection(TileTag tTag)
-        {
-            selectedTiles.Add(tTag);
-            tTag._Container.BorderStyle = BorderStyle.FixedSingle;
         }
 
     }

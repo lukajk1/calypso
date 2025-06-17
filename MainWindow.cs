@@ -13,7 +13,7 @@ namespace Calypso
             InitializeComponent();
             this.KeyPreview = true;
 
-            new Database(this);
+            Mediator.Init(this);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -56,6 +56,12 @@ namespace Calypso
                     return true;
                 }
             }
+
+            else if (keyData == Keys.Delete)
+            {
+                Gallery.DeleteSelected();
+            }
+
                 // ctrl shortcuts --------------------------------------------------------------------------------
             if (keyData == (Keys.Control | Keys.Q))
             {
@@ -75,6 +81,14 @@ namespace Calypso
                     searchBox.Focus();
 
 
+                return true;
+            }
+            else if (keyData == (Keys.Control | Keys.A))
+            {
+                if (!(focused == searchBox))
+                {
+                    Gallery.SelectAll();
+                }
                 return true;
             }
 

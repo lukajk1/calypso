@@ -41,6 +41,7 @@ namespace Calypso.UI
 
             Window.Populate(Database.i.tagDict, selection);
             Window.Show();
+            Window.newTagTextBox.Focus();
         }
     }
 }
