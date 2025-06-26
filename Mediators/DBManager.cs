@@ -10,7 +10,7 @@ namespace Calypso
     internal static class DBManager
     {
         private static MainWindow mainW;
-        private static Session Session;
+        private static SessionData Session;
         public static void Init(MainWindow mainW)
         {
             DBManager.mainW = mainW;
@@ -35,6 +35,13 @@ namespace Calypso
             else return;
 
             PopulateLibraryUI();
+            SessionData sessionData = default;
+
+            if (DBUtility.RetrieveSession(out sessionData))
+            {
+                mainW.LoadSession(sessionData);
+            }
+
         }
         public static void LoadLibrary(int num)
         {

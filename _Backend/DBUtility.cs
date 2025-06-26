@@ -22,6 +22,7 @@ namespace Calypso
         private static string jsonLibraryList; // keep this, no need to move this field out of here.
         private static string appdataDirPath;
         private static string jsonActiveLibraryDB;
+        private static string jsonSession;
 
         // specific to active library? keep?
         public static List<ImageData> loadedImageDataList = new();
@@ -34,13 +35,13 @@ namespace Calypso
         {
             appdataDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CalypsoManager");
             jsonLibraryList = Path.Combine(appdataDirPath, "libraries.json");
+            jsonSession = Path.Combine(appdataDirPath, "session.json");
 
             bool appdataExists = Directory.Exists(appdataDirPath);
             if (!appdataExists) Directory.CreateDirectory(appdataDirPath);
 
             jsonExists = File.Exists(jsonLibraryList);
         }
-        
         public static bool ReadDBJson()
         {
             if (Util.TryDeserializeFromFile<List<LibraryData>>(jsonLibraryList, out Libraries))
@@ -88,6 +89,24 @@ namespace Calypso
 
         }
 
+        public static bool RetrieveSession(out SessionData sessionData)
+        {
+            sessionData = default;
+
+            if (File.Exists(jsonSession))
+            {
+                if (Util.TryDeserializeFromFile<SessionData>(jsonSession, out sessionData))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        public static void SaveSession(SessionData session)
+        {
+            Util.SerializeToFile<SessionData>(session, jsonSession);
+        }
 
         private static bool PromptUserForLibrary(string message, out string libraryPath)
         {

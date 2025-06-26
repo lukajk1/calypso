@@ -11,6 +11,7 @@ namespace Calypso
         {
             InitializeComponent();
             this.KeyPreview = true;
+            this.FormClosed += MainWindow_FormClosed;
 
             Mediator.Init(this);
         }
@@ -155,6 +156,25 @@ namespace Calypso
             }
         }
 
+        public void LoadSession(SessionData session)
+        {
+            this.Height = session.WindowHeight;
+            this.Width = session.WindowWidth;
+            this.checkBoxRandomize.Checked = session.RandomiseChecked;
+            this.WindowState = session.WindowState;
+        }
+
+        private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            SessionData session = new SessionData()
+            {
+                WindowHeight = this.Height,
+                WindowWidth = this.Width,
+                RandomiseChecked = this.checkBoxRandomize.Checked,
+                WindowState = this.WindowState
+            };
+            DBUtility.SaveSession(session);
+        }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
