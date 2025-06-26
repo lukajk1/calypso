@@ -25,7 +25,7 @@ namespace Calypso
             int[] map = { 0, 25, 50 }; // upperlimit settings
             int resultsCount = map[index];
 
-            DBUtility.Search(text, mainW.checkBoxRandomize.Checked, resultsCount);
+            Database.Search(text, mainW.checkBoxRandomize.Checked, resultsCount);
         }
 
         public static void RepeatLastSearch()

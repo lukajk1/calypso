@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Calypso
 {
-    internal static partial class DBUtility
+    internal static partial class Database
     {
         public static Dictionary<string, List<ImageData>> tagIndex = new();
         public static void Search(string searchTextRaw, bool randomize, int upperLimit)
@@ -21,23 +21,23 @@ namespace Calypso
 
             if (stripped == "all")
             {
-                results = DBUtility.loadedImageDataList;
+                results = Database.loadedImageDataList;
             }
             else if (stripped == "untagged")
             {
-                results = DBUtility.dbUntaggedImageData;
+                results = Database.dbUntaggedImageData;
             }
             else if (stripped == "randtag" || stripped == "rtag" || stripped == "randomtag")
             {
                 var random = new Random();
 
-                if (!(DBUtility.tagDict.Count > 0)) 
+                if (!(Database.tagDict.Count > 0)) 
                 {
                     Gallery.Populate(results); // return empty
                 }
                 else
                 {
-                    string randTag = DBUtility.tagDict.ElementAt(random.Next(DBUtility.tagDict.Count)).Key;
+                    string randTag = Database.tagDict.ElementAt(random.Next(Database.tagDict.Count)).Key;
                     Searchbar.Search(randTag); 
                     return;
                 }

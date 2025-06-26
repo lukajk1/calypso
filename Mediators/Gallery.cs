@@ -22,8 +22,10 @@ namespace Calypso
 
         static List<ImageData> lastSearch = new();
         static List<TileTag> selectedTiles = new();
+        static List<TileTag> allTiles = new();
 
         private static float _loadProgress = 0f;
+        private static int pbPerRow = 0;
         public static float LoadProgress
         {
             get => _loadProgress;
@@ -50,7 +52,8 @@ namespace Calypso
 
             flowLayoutGallery.AllowDrop = true;
             flowLayoutGallery.DragEnter += flowLayoutGallery_DragEnter;
-            flowLayoutGallery.DragDrop += flowLayoutGallery_DragDrop;
+            flowLayoutGallery.DragDrop += flowLayoutGallery_DragDrop; 
+            flowLayoutGallery.SizeChanged += FlowLayoutGallery_SizeChanged;
         }
 
         public static void Populate(List<ImageData> results)
@@ -73,6 +76,7 @@ namespace Calypso
             }
 
             LoadProgress = 0f;
+            CountPictureBoxesPerRow();
         }
 
         private static void ClearExistingControls()
@@ -87,7 +91,7 @@ namespace Calypso
             }
         }
 
-        private static void ClearSelectionList()
+        private static void ClearSelection()
         {
             foreach (TileTag tTag in selectedTiles)
             {
@@ -102,6 +106,8 @@ namespace Calypso
             selectedTiles.Add(tTag);
             tTag._Container.BorderStyle = BorderStyle.FixedSingle;
             selectedCountLabel.Text = $"Selected: ({selectedTiles.Count})";
+
+            ImageInfoPanel.Display(tTag._ImageData);
         }
 
         public static void SelectAll()
@@ -155,6 +161,7 @@ namespace Calypso
             };
 
             pb.Tag = tileTag;
+            allTiles.Add(tileTag);
 
             pb.DoubleClick += PictureBox_DoubleClick;
             pb.MouseClick += PictureBox_MouseClick;
@@ -184,7 +191,7 @@ namespace Calypso
                 }
             }
 
-            DBUtility.DeleteImageData(selectedTiles.Select(t => t._ImageData).ToList());
+            Database.DeleteImageData(selectedTiles.Select(t => t._ImageData).ToList());
 
             selectedTiles.Clear();
         }
@@ -200,13 +207,18 @@ namespace Calypso
         private static void flowLayoutGallery_DragDrop(object sender, DragEventArgs e)
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            List<ImageData> myList = DBUtility.AddFilesToLibrary(files);
+            List<ImageData> myList = Database.AddFilesToLibrary(files);
             
             foreach (ImageData img in myList)
             {
                 AddCard(img);
                 Debug.WriteLine("this was called");
             }
+        }
+
+        private static void FlowLayoutGallery_SizeChanged(object sender, EventArgs e)
+        {
+            CountPictureBoxesPerRow();
         }
 
         const int DragThreshold = 17; // (px) less sensitive than system default to avoid false positives more 
@@ -238,8 +250,6 @@ namespace Calypso
             };
         }
 
-
-
         private static void PictureBox_DoubleClick(object? sender, EventArgs e)
         {
             if (sender is PictureBox pb && pb.Tag is TileTag tTag && File.Exists(tTag._ImageData.FullResPath))
@@ -258,14 +268,13 @@ namespace Calypso
 
             bool ctrlHeld = (Control.ModifierKeys & Keys.Control) == Keys.Control;
 
-            if (!ctrlHeld) ClearSelectionList();
+            if (!ctrlHeld) ClearSelection();
             AddToSelection(tTag);
 
-            if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
-            {
-                ImageInfoPanel.Display(tTag._ImageData);
-                tTag._Container.BorderStyle = BorderStyle.FixedSingle;
-            }
+            //if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
+            //{
+                
+            //}
 
             if (e.Button == MouseButtons.Right && File.Exists(tTag._ImageData.FullResPath))
             {
@@ -273,6 +282,67 @@ namespace Calypso
             }
         }
 
+        public static void ArrowSelect(Keys keyData)
+        {
+            if (selectedTiles.Count != 1) return;
+
+            int index = allTiles.IndexOf(selectedTiles[0]);
+            int newIndex = 0;
+
+            switch(keyData)
+            {
+                case Keys.Left:
+                    newIndex = index - 1;
+                    break;
+                case Keys.Right:
+                    newIndex = index + 1;
+                    break;
+                case Keys.Up:
+                    newIndex = index - pbPerRow;
+                    break;
+                case Keys.Down:
+                    newIndex = index + pbPerRow;
+                    break;
+            }
+
+            if (newIndex >= 0 && newIndex < allTiles.Count)
+            {
+                ClearSelection();
+                AddToSelection(allTiles[newIndex]);
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        public static int CountPictureBoxesPerRow()
+        {
+            int? currentRowY = null;
+            int count = 0;
+
+            foreach (Control ctrl in flowLayoutGallery.Controls)
+            {
+                if (ctrl is Panel panel)
+                {
+                    if (currentRowY == null)
+                    {
+                        currentRowY = panel.Top;
+                    }
+
+                    if (panel.Top == currentRowY)
+                    {
+                        count++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+            pbPerRow = count;
+            return count;
+        }
         public static void OpenTagEditorByCommand()
         {
             if (selectedTiles.Count > 0)

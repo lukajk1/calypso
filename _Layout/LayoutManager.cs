@@ -7,56 +7,70 @@ using System.Threading.Tasks;
 
 namespace Calypso
 {
-    internal class LayoutManager : LayoutPresets
+    internal static class LayoutManager
     {
-        public static LayoutManager i { get; private set; }
 
-        private SplitContainer tagTreeSplitContainer;
-        private SplitContainer masterSplitContainer;
-        private SplitContainer imageInfoHorizontalSplitContainer;
+        public static LayoutData DefaultLayout = 
+            new LayoutData()
+            {
+                MetadataVSplitter_Ratio = 0.76f,
+                LeftPanelHSplitter_Ratio = 0.2f,
+                RightPanelHSplitter_Ratio = 0.65f,
+                Metadata_IsOpen = true,
+                LeftPanel_IsOpen = true,
+                RightPanel_IsOpen = true
+            };
 
-        int metadataHSplitter_Distance;
-        int leftPanelVSplitter_Distance;
-        int rightPanelVSplitter_Distance;
+        public static LayoutData LargeWindow =
+            new LayoutData()
+            {
+                MetadataVSplitter_Ratio = 0.74f,
+                LeftPanelHSplitter_Ratio = 0.28f,
+                RightPanelHSplitter_Ratio = 0.35f,
+                Metadata_IsOpen = false,
+                LeftPanel_IsOpen = false,
+                RightPanel_IsOpen = true
+            };
 
-        //bool metadata_IsOpen;
-        //bool leftPanel_IsOpen;
-        //bool rightPanel_IsOpen;
+        private static SplitContainer tagTreeSplitContainer;
+        private static SplitContainer masterSplitContainer;
+        private static SplitContainer imageInfoHorizontalSplitContainer;
 
+        static int metadataHSplitter_Distance;
+        static int leftPanelVSplitter_Distance;
+        static int rightPanelVSplitter_Distance;
 
-        MainWindow? mainW;
-        public LayoutManager(MainWindow mainW)
+        static MainWindow? mainW;
+        public static void Init(MainWindow mainW)
         {
-            if (i != null)
-                throw new InvalidOperationException($"Cannot have two instances of {this}");
+            LayoutManager.mainW = mainW;
 
-            i = this;
-            this.mainW = mainW;
+            tagTreeSplitContainer = mainW.tagTreeGallerySplitContainer;
+            imageInfoHorizontalSplitContainer = mainW.imageInfoHorizontalSplitContainer;
+            masterSplitContainer = mainW.masterSplitContainer;
 
-            i.tagTreeSplitContainer = mainW.tagTreeGallerySplitContainer;
-            i.imageInfoHorizontalSplitContainer = mainW.imageInfoHorizontalSplitContainer;
-            i.masterSplitContainer = mainW.masterSplitContainer;
+            SetLayout(DefaultLayout);
         }
 
-        public void SetLayout(LayoutData ld)
+        public static void SetLayout(LayoutData ld)
         {
-            SetPanel(i.masterSplitContainer, 2, ld.RightPanel_IsOpen);
-            SetPanel(i.tagTreeSplitContainer, 1, ld.LeftPanel_IsOpen);
-            SetPanel(i.imageInfoHorizontalSplitContainer, 2, ld.Metadata_IsOpen);
+            SetPanel(masterSplitContainer, 2, ld.RightPanel_IsOpen);
+            SetPanel(tagTreeSplitContainer, 1, ld.LeftPanel_IsOpen);
+            SetPanel(imageInfoHorizontalSplitContainer, 2, ld.Metadata_IsOpen);
 
             tagTreeSplitContainer.SplitterDistance = (int)Math.Round(tagTreeSplitContainer.Width * ld.LeftPanelHSplitter_Ratio);
             masterSplitContainer.SplitterDistance = (int)Math.Round(masterSplitContainer.Width * ld.RightPanelHSplitter_Ratio);
             imageInfoHorizontalSplitContainer.SplitterDistance = (int)Math.Round(imageInfoHorizontalSplitContainer.Height * ld.MetadataVSplitter_Ratio);
         }
 
-        public void SaveLayout()
+        public static void SaveLayout()
         {
 
         }
 
         // managing methods -----------------------------------------------------------------------
 
-        public void SetPanel(SplitContainer splitContainer, int panelNumber, bool value)
+        public static void SetPanel(SplitContainer splitContainer, int panelNumber, bool value)
         {
             //// if re-opening the splitter, set the distance 
             //int splitterDistance = 0;
@@ -73,7 +87,7 @@ namespace Calypso
                 splitContainer.Panel2Collapsed = !value;
         }
 
-        public void TogglePanel(SplitContainer splitContainer, int panelNumber) 
+        public static void TogglePanel(SplitContainer splitContainer, int panelNumber) 
         {
             SetPanel(splitContainer, panelNumber, panelNumber == 1? splitContainer.Panel1Collapsed : splitContainer.Panel2Collapsed);
         }

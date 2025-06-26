@@ -17,11 +17,11 @@ namespace Calypso
             Mediator.mainW = mainW;
             mainW.Activate();
             mainW.Focus();
-            // this order is kinda specific lol.
+
             // The selected index needs to be set to 0 before the first search is run.
             mainW.comboBoxResultsNum.SelectedIndex = 0;
 
-            // mediator-level initializers
+            // initialize all mediators
             Gallery.Init(mainW);
             StatusBar.Init(mainW);
             TreesPanel.Init(mainW);
@@ -29,10 +29,7 @@ namespace Calypso
             Searchbar.Init(mainW);
             TagEditManager.Init(mainW);
             DBManager.Init(mainW);
-
-            // remove singleton?
-            new LayoutManager(mainW);
-            LayoutManager.i.SetLayout(LayoutManager.DefaultLayout);
+            LayoutManager.Init(mainW);
         }
     }
 }

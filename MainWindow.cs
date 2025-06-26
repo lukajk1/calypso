@@ -27,7 +27,7 @@ namespace Calypso
             {
                 if (!searchBox.ContainsFocus)
                 {
-                    LayoutManager.i.TogglePanel(tagTreeGallerySplitContainer, 1);
+                    LayoutManager.TogglePanel(tagTreeGallerySplitContainer, 1);
                     return true; // suppress further handling
                 }
 
@@ -36,7 +36,7 @@ namespace Calypso
             {
                 if (!searchBox.ContainsFocus)
                 {
-                    LayoutManager.i.TogglePanel(masterSplitContainer, 2);
+                    LayoutManager.TogglePanel(masterSplitContainer, 2);
                     return true;
                 }
             }
@@ -44,7 +44,7 @@ namespace Calypso
             {
                 if (!searchBox.ContainsFocus)
                 {
-                    LayoutManager.i.TogglePanel(imageInfoHorizontalSplitContainer, 2);
+                    LayoutManager.TogglePanel(imageInfoHorizontalSplitContainer, 2);
                     return true;
                 }
             }
@@ -83,7 +83,7 @@ namespace Calypso
             }
             else if (keyData == (Keys.Control | Keys.Enter))
             {
-                DBUtility.OpenCurrentLibrarySourceFolder();
+                Database.OpenCurrentLibrarySourceFolder();
                 return true;
             }
             else if (keyData == (Keys.Control | Keys.A))
@@ -97,13 +97,13 @@ namespace Calypso
 
             else if (keyData == (Keys.Control | Keys.D1))
             {
-                LayoutManager.i.SetLayout(LayoutManager.DefaultLayout);
+                LayoutManager.SetLayout(LayoutManager.DefaultLayout);
                 return true;
             }
             else if (keyData == (Keys.Control | Keys.D2))
             {
                 //MessageBox.Show("received");
-                LayoutManager.i.SetLayout(LayoutManager.LargeWindow);
+                LayoutManager.SetLayout(LayoutManager.LargeWindow);
                 return true;
             }
 
@@ -119,6 +119,12 @@ namespace Calypso
                 Commands.AddFilesViaDialog();
                 return true;
             }
+            // arrow keys
+            else if (keyData == Keys.Left || keyData == Keys.Right || keyData == Keys.Up || keyData == Keys.Down)
+            {
+                Gallery.ArrowSelect(keyData);
+            }
+
 
             // shift
             else if ((keyData & (Keys.Control | Keys.Shift)) == (Keys.Control | Keys.Shift))
@@ -173,7 +179,7 @@ namespace Calypso
                 RandomiseChecked = this.checkBoxRandomize.Checked,
                 WindowState = this.WindowState
             };
-            DBUtility.SaveSession(session);
+            Database.SaveSession(session);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -211,12 +217,12 @@ namespace Calypso
         private void toolStripMenuItem5_Click(object sender, EventArgs e)
         {
 
-            LayoutManager.i.SetLayout(LayoutManager.DefaultLayout);
+            LayoutManager.SetLayout(LayoutManager.DefaultLayout);
         }
 
         private void toolStripMenuItem3_Click(object sender, EventArgs e)
         {
-            LayoutManager.i.SetLayout(LayoutManager.LargeWindow);
+            LayoutManager.SetLayout(LayoutManager.LargeWindow);
         }
 
         private void toolStripMenuItem9_Click(object sender, EventArgs e)
@@ -226,7 +232,7 @@ namespace Calypso
 
         private void toolStripMenuItem1_Click_1(object sender, EventArgs e)
         {
-            DBUtility.OpenCurrentLibrarySourceFolder();
+            Database.OpenCurrentLibrarySourceFolder();
         }
 
         private void checkBoxRandomize_CheckedChanged(object sender, EventArgs e)
@@ -236,7 +242,7 @@ namespace Calypso
 
         private void toolStripMenuItemAddNewLibrary_Click(object sender, EventArgs e)
         {
-            DBUtility.AddNewLibrary();
+            Database.AddNewLibrary();
         }
     }
 }

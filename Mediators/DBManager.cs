@@ -14,7 +14,7 @@ namespace Calypso
         public static void Init(MainWindow mainW)
         {
             DBManager.mainW = mainW;
-            DBUtility.OnNewLibraryLoaded += OnNewLibraryLoaded;
+            Database.OnNewLibraryLoaded += OnNewLibraryLoaded;
 
             Start();
         }
@@ -22,22 +22,22 @@ namespace Calypso
         private static void Start()
         {
             bool jsonExists;
-            DBUtility.Init(out jsonExists);
+            Database.Init(out jsonExists);
 
-            if (jsonExists && DBUtility.ReadDBJson())
+            if (jsonExists && Database.ReadDBJson())
             {
-                DBUtility.LoadActiveLibrary();
+                Database.LoadActiveLibrary();
             }
-            else if (DBUtility.CreateDBJson())
+            else if (Database.CreateDBJson())
             {
-                DBUtility.LoadActiveLibrary();
+                Database.LoadActiveLibrary();
             }
             else return;
 
             PopulateLibraryUI();
             SessionData sessionData = default;
 
-            if (DBUtility.RetrieveSession(out sessionData))
+            if (Database.RetrieveSession(out sessionData))
             {
                 mainW.LoadSession(sessionData);
             }
@@ -45,9 +45,9 @@ namespace Calypso
         }
         public static void LoadLibrary(int num)
         {
-            if (DBUtility.Libraries.ElementAtOrDefault(num-1) != null)
+            if (Database.Libraries.ElementAtOrDefault(num-1) != null)
             {
-                DBUtility.LoadLibrary(DBUtility.Libraries[num-1]);
+                Database.LoadLibrary(Database.Libraries[num-1]);
             }
         }
         static void OnNewLibraryLoaded(LibraryData lib)
@@ -72,14 +72,14 @@ namespace Calypso
                 mainW.openExistingLibraryToolStripMenuItem.DropDownItems.Remove(item);
             }
 
-            foreach (LibraryData lib in DBUtility.Libraries)
+            foreach (LibraryData lib in Database.Libraries)
             {
                 ToolStripMenuItem newItem = new ToolStripMenuItem(lib.Name);
                 //if (lib == DBUtility.ActiveLibrary) newItem.Enabled = false;
 
                 newItem.Click += (sender, e) =>
                 {
-                    DBUtility.LoadLibrary(lib);
+                    Database.LoadLibrary(lib);
                 };
 
                 mainW.openExistingLibraryToolStripMenuItem.DropDownItems.Insert(0, newItem);

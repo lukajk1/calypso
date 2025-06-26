@@ -39,7 +39,7 @@ namespace Calypso.UI
                 Window.Text = $"Tag Editor - {selection.Count} Items Selected";
             }
 
-            Window.Populate(DBUtility.tagDict, selection);
+            Window.Populate(Database.tagDict, selection);
             Window.Show();
             Window.newTagTextBox.Focus();
         }

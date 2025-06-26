@@ -14,7 +14,7 @@ using System.Windows.Forms.Design;
 
 namespace Calypso
 {
-    internal static partial class DBUtility
+    internal static partial class Database
     {
         public static List<LibraryData> Libraries = new();
         public static LibraryData? ActiveLibrary;
@@ -148,7 +148,7 @@ namespace Calypso
 
             if (File.Exists(jsonActiveLibraryDB) && Util.TryDeserializeFromFile<List<ImageData>>(jsonActiveLibraryDB, out loadedImageDataList))
             {
-                Dictionary<string, ImageData> fileNameDict = DBUtility.GenerateFilenameDict(loadedImageDataList);
+                Dictionary<string, ImageData> fileNameDict = Database.GenerateFilenameDict(loadedImageDataList);
 
                 foreach (string filepath in allImageFiles)
                 {
@@ -225,7 +225,7 @@ namespace Calypso
         public static void GenDictsAndSaveLibrary()
         {
             BuildTagDict();
-            DBUtility.GenerateTagDict(loadedImageDataList);
+            Database.GenerateTagDict(loadedImageDataList);
             Util.SerializeToFile<List<ImageData>>(loadedImageDataList, jsonActiveLibraryDB);
         }
 
@@ -280,9 +280,9 @@ namespace Calypso
         }
         public static void RemoveTag(string tag)
         {
-            if (!DBUtility.tagIndex.ContainsKey(tag)) return;
+            if (!Database.tagIndex.ContainsKey(tag)) return;
 
-            foreach (ImageData imgData in DBUtility.tagIndex[tag])
+            foreach (ImageData imgData in Database.tagIndex[tag])
             {
                 imgData.Tags.Remove(tag);
             }
