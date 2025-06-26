@@ -1,0 +1,82 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Calypso
+{
+    internal static class DBManager
+    {
+        private static MainWindow mainW;
+        private static Session Session;
+        public static void Init(MainWindow mainW)
+        {
+            DBManager.mainW = mainW;
+            DBUtility.OnNewLibraryLoaded += OnNewLibraryLoaded;
+
+            Start();
+        }
+
+        private static void Start()
+        {
+            bool jsonExists;
+            DBUtility.Init(out jsonExists);
+
+            if (jsonExists && DBUtility.ReadDBJson())
+            {
+                DBUtility.LoadActiveLibrary();
+            }
+            else if (DBUtility.CreateDBJson())
+            {
+                DBUtility.LoadActiveLibrary();
+            }
+            else return;
+
+            PopulateLibraryUI();
+        }
+        public static void LoadLibrary(int num)
+        {
+            if (DBUtility.Libraries.ElementAtOrDefault(num-1) != null)
+            {
+                DBUtility.LoadLibrary(DBUtility.Libraries[num-1]);
+            }
+        }
+        static void OnNewLibraryLoaded(LibraryData lib)
+        {
+            Searchbar.Search("all");
+            mainW.Text = Mediator.MainWindowTitle + " - " + lib.Name;
+        }
+        static void PopulateLibraryUI()
+        {
+            var toRemove = new List<ToolStripItem>();
+
+            foreach (ToolStripItem item in mainW.openExistingLibraryToolStripMenuItem.DropDownItems)
+            {
+                if (item is ToolStripMenuItem menuItem && item.Tag?.ToString() != "no-delete")
+                {
+                    toRemove.Add(item);
+                }
+            }
+
+            foreach (var item in toRemove)
+            {
+                mainW.openExistingLibraryToolStripMenuItem.DropDownItems.Remove(item);
+            }
+
+            foreach (LibraryData lib in DBUtility.Libraries)
+            {
+                ToolStripMenuItem newItem = new ToolStripMenuItem(lib.Name);
+                //if (lib == DBUtility.ActiveLibrary) newItem.Enabled = false;
+
+                newItem.Click += (sender, e) =>
+                {
+                    DBUtility.LoadLibrary(lib);
+                };
+
+                mainW.openExistingLibraryToolStripMenuItem.DropDownItems.Insert(0, newItem);
+            }
+        }
+    }
+}

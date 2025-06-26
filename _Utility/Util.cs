@@ -14,6 +14,16 @@ namespace Calypso
         {
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+        public static DialogResult ShowInfoDialog(string message)
+        {
+            return MessageBox.Show(
+                message,
+                "Notice",
+                MessageBoxButtons.OKCancel,
+                MessageBoxIcon.Information);
+        }
+
+
 
         public static string[] GetAllImageFilepaths(string path)
         {
@@ -32,11 +42,22 @@ namespace Calypso
             File.WriteAllText(filePath, json);
         }
 
-        public static T DeserializeFromFile<T>(string filePath)
+        public static bool TryDeserializeFromFile<T>(string filePath, out T result)
         {
-            string json = File.ReadAllText(filePath);
-            return JsonSerializer.Deserialize<T>(json);
+            result = default;
+            try
+            {
+                string json = File.ReadAllText(filePath);
+                result = JsonSerializer.Deserialize<T>(json);
+                return result != null;
+            }
+            catch
+            {
+                return false;
+            }
         }
+
+
         public static Image CreateThumbnail(string imagePath, int thumbnailHeight)
         {
             using Image fullImage = Image.FromFile(imagePath);

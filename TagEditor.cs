@@ -124,8 +124,8 @@ namespace Calypso
 
                 checkedListBox1.Items.Remove(checkedListBox1.SelectedItem);
 
-                Database.i.RemoveTag(tag);
-                Database.i.RefreshAndSaveDatabase();
+                DBUtility.RemoveTag(tag);
+                DBUtility.GenDictsAndSaveLibrary();
                 e.Handled = true;
             }
         }
@@ -199,7 +199,7 @@ namespace Calypso
 
             }
 
-            Database.i.RefreshAndSaveDatabase();
+            DBUtility.GenDictsAndSaveLibrary();
 
             this.CloseForm();
         }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Calypso
 {
-    internal static class DBUtilities
+    internal static partial class DBUtility
     {
         public static Dictionary<string, List<ImageData>> tagIndex = new();
         public static void Search(string searchTextRaw, bool randomize, int upperLimit)
@@ -21,23 +21,23 @@ namespace Calypso
 
             if (stripped == "all")
             {
-                results = Database.i.loadedImageDataDatabase;
+                results = DBUtility.loadedImageDataList;
             }
             else if (stripped == "untagged")
             {
-                results = Database.i.dbUntaggedImageData;
+                results = DBUtility.dbUntaggedImageData;
             }
             else if (stripped == "randtag" || stripped == "rtag" || stripped == "randomtag")
             {
                 var random = new Random();
 
-                if (!(Database.i.tagDict.Count > 0)) 
+                if (!(DBUtility.tagDict.Count > 0)) 
                 {
                     Gallery.Populate(results); // return empty
                 }
                 else
                 {
-                    string randTag = Database.i.tagDict.ElementAt(random.Next(Database.i.tagDict.Count)).Key;
+                    string randTag = DBUtility.tagDict.ElementAt(random.Next(DBUtility.tagDict.Count)).Key;
                     Searchbar.Search(randTag); 
                     return;
                 }
@@ -80,7 +80,6 @@ namespace Calypso
             tagInclude = includeList.ToArray();
             tagExclude = excludeList.ToArray();
         }
-
         public static List<ImageData> FilterByTags(string[] tagInclude, string[] tagExclude)
         {
             var result = tagInclude
@@ -99,7 +98,6 @@ namespace Calypso
 
             return result;
         }
-
         public static void GenerateTagDict(List<ImageData> allImages)
         {
             tagIndex.Clear();
@@ -117,7 +115,6 @@ namespace Calypso
             }
 
         }
-
         public static Dictionary<string, ImageData> GenerateFilenameDict(List<ImageData> allImages)
         {
             var filenameIndex = new Dictionary<string, ImageData>(StringComparer.OrdinalIgnoreCase);
@@ -129,6 +126,26 @@ namespace Calypso
             }
 
             return filenameIndex;
+        }
+
+        public static void DeleteImageData(List<ImageData> imgDataList)
+        {
+            foreach (ImageData imgData in imgDataList)
+            {
+                loadedImageDataList.Remove(imgData);
+
+                if (File.Exists(imgData.ThumbnailPath))
+                {
+                    File.Delete(imgData.ThumbnailPath);
+                }
+
+                if (File.Exists(imgData.FullResPath))
+                {
+                    File.Delete(imgData.FullResPath);
+                }
+            }
+
+            GenDictsAndSaveLibrary();
         }
     }
 }

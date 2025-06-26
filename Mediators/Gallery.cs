@@ -9,7 +9,6 @@ using System.IO;
 using System.Diagnostics;
 using System.Data;
 using Calypso.UI;
-using MetadataExtractor;
 namespace Calypso
 {
     internal class Gallery
@@ -58,64 +57,19 @@ namespace Calypso
         {
             lastSearch = results;
             ClearExistingControls();
-            GenerateContent(results);
+            GenerateGallery(results);
 
             resultsCountLabel.Text = $"Results: {results.Count}";
         }
-        private static void GenerateContent(List<ImageData> content)
+        private static void GenerateGallery(List<ImageData> results)
         {
             float processedCount = 0f;
-            foreach (ImageData imageData in content)
+            foreach (ImageData imageData in results)
             {
+                AddCard(imageData);
 
-                Label label = new Label
-                {
-                    Text = imageData.Filename,
-                    TextAlign = ContentAlignment.MiddleCenter,
-                    Dock = DockStyle.Bottom,
-                    AutoSize = false,
-                    Width = GlobalValues.ThumbnailHeight,
-                    Height = 20
-                };
-
-                Panel container = new Panel
-                {
-                    Width = GlobalValues.ThumbnailHeight + 10,
-                    Height = GlobalValues.ThumbnailHeight + 30,
-                    Margin = new Padding(5)
-                };
-
-                PictureBox pb = new PictureBox
-                {
-                    Cursor = Cursors.Hand,
-                    SizeMode = PictureBoxSizeMode.Zoom,
-                    Size = new Size(GlobalValues.ThumbnailHeight, GlobalValues.ThumbnailHeight),
-                    Image = Image.FromFile(imageData.ThumbnailPath),
-                    Margin = new Padding(5)
-                };
-
-                TileTag tileTag = new TileTag
-                {
-                    _ImageData = imageData,
-                    _Container = container,
-                    _PictureBox = pb
-                };
-
-                pb.Tag = tileTag;
-
-                pb.DoubleClick += PictureBox_DoubleClick;
-                pb.MouseClick += PictureBox_MouseClick;
-                AddDraggableHandlers(pb);
-
-                pb.Dock = DockStyle.Top;
-                container.Controls.Add(pb);
-                container.Controls.Add(label);
-
-                flowLayoutGallery.Controls.Add(container);
-                
                 processedCount++;
-                LoadProgress = processedCount / content.Count;
-                //pb.Image.Dispose();
+                LoadProgress = processedCount / results.Count;
             }
 
             LoadProgress = 0f;
@@ -162,6 +116,58 @@ namespace Calypso
                 }
             }
         }
+
+        public static void AddCard(ImageData imgData)
+        {
+            Label label = new Label
+            {
+                Text = imgData.Filename,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Dock = DockStyle.Bottom,
+                AutoSize = false,
+                Width = GlobalValues.ThumbnailHeight,
+                Height = 20
+            };
+
+            Panel container = new Panel
+            {
+                Width = GlobalValues.ThumbnailHeight + 10,
+                Height = GlobalValues.ThumbnailHeight + 30,
+                Margin = new Padding(5)
+            };
+
+
+            PictureBox pb = new PictureBox
+            {
+                Cursor = Cursors.Hand,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Size = new Size(GlobalValues.ThumbnailHeight, GlobalValues.ThumbnailHeight),
+                Margin = new Padding(5)
+            };
+            using var stream = new FileStream(imgData.ThumbnailPath, FileMode.Open, FileAccess.Read);
+            pb.Image = Image.FromStream(stream);
+
+            TileTag tileTag = new TileTag
+            {
+                _ImageData = imgData,
+                _Container = container,
+                _PictureBox = pb
+            };
+
+            pb.Tag = tileTag;
+
+            pb.DoubleClick += PictureBox_DoubleClick;
+            pb.MouseClick += PictureBox_MouseClick;
+            AddDraggableHandlers(pb);
+
+            pb.Dock = DockStyle.Top;
+            container.Controls.Add(pb);
+            container.Controls.Add(label);
+
+            flowLayoutGallery.Controls.Add(container);
+            //pb.Image.Dispose();
+        }
+
         public static void DeleteSelected()
         {
             foreach (TileTag t in selectedTiles)
@@ -178,7 +184,7 @@ namespace Calypso
                 }
             }
 
-            Database.i.DeleteImageData(selectedTiles.Select(t => t._ImageData).ToList());
+            DBUtility.DeleteImageData(selectedTiles.Select(t => t._ImageData).ToList());
 
             selectedTiles.Clear();
         }
@@ -194,20 +200,12 @@ namespace Calypso
         private static void flowLayoutGallery_DragDrop(object sender, DragEventArgs e)
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            string targetDir = Database.i.GetCurrentLibrary().DirectoryPath;
-
-            foreach (string file in files)
+            List<ImageData> myList = DBUtility.AddFilesToLibrary(files);
+            
+            foreach (ImageData img in myList)
             {
-                string ext = Path.GetExtension(file).ToLower();
-                if (ext is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".gif")
-                {
-                    string destPath = Path.Combine(targetDir, Path.GetFileName(file));
-
-                    if (!File.Exists(destPath))
-                        File.Copy(file, destPath, overwrite: false);
-                    else
-                        Util.ShowErrorDialog($"A file named {Path.GetFileName(file)} already exists in {targetDir}!");
-                }
+                AddCard(img);
+                Debug.WriteLine("this was called");
             }
         }
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Calypso
 {
-    internal struct SessionStruct
+    internal struct Session
     {
         public int WindowWidth;
         public int WindowHeight;

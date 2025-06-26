@@ -1,6 +1,5 @@
 using Calypso.UI;
 using System.Diagnostics;
-using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
 
 namespace Calypso
@@ -62,7 +61,7 @@ namespace Calypso
                 Gallery.DeleteSelected();
             }
 
-                // ctrl shortcuts --------------------------------------------------------------------------------
+            // ctrl shortcuts --------------------------------------------------------------------------------
             if (keyData == (Keys.Control | Keys.Q))
             {
                 Close();
@@ -70,8 +69,6 @@ namespace Calypso
             }
             else if (keyData == (Keys.Control | Keys.L))
             {
-                
-
                 if (focused == searchBox)
                 {
                     // focus the tagtree I guess. just has to move focus off the searchbar
@@ -81,6 +78,11 @@ namespace Calypso
                     searchBox.Focus();
 
 
+                return true;
+            }
+            else if (keyData == (Keys.Control | Keys.Enter))
+            {
+                DBUtility.OpenCurrentLibrarySourceFolder();
                 return true;
             }
             else if (keyData == (Keys.Control | Keys.A))
@@ -117,18 +119,18 @@ namespace Calypso
                 return true;
             }
 
-            // ctrl shift shortcuts --------------------------------------------------------------------------------
-            //else if (keyData == (Keys.Control | Keys.Shift | Keys.D1))
-            //{
-            //    // Ctrl + Shift + 1
-            //    return true;
-            //}
-            //else if (keyData == (Keys.Control | Keys.Shift | Keys.D2))
-            //{
-            //    // Ctrl + Shift + 2
-            //    return true;
-            //}
-
+            // shift
+            else if ((keyData & (Keys.Control | Keys.Shift)) == (Keys.Control | Keys.Shift))
+            {
+                for (int i = 1; i <= 9; i++)
+                {
+                    if ((keyData & Keys.KeyCode) == (Keys)((int)Keys.D0 + i))
+                    {
+                        DBManager.LoadLibrary(i);
+                        break;
+                    }
+                }
+            }
 
 
             return base.ProcessCmdKey(ref msg, keyData);
@@ -174,10 +176,10 @@ namespace Calypso
                 e.Handled = true;
 
 
-                if (File.Exists(searchBox.Text)) 
-                { 
+                if (File.Exists(searchBox.Text))
+                {
                     // handle file explorer capabilities at some point? 
-                } 
+                }
                 else
                 {
                     Searchbar.Search(searchBox.Text);
@@ -197,14 +199,24 @@ namespace Calypso
             LayoutManager.i.SetLayout(LayoutManager.LargeWindow);
         }
 
-        private void toolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            Database.i.OpenSourceFolder();
-        }
-
         private void toolStripMenuItem9_Click(object sender, EventArgs e)
         {
             Commands.AddFilesViaDialog();
+        }
+
+        private void toolStripMenuItem1_Click_1(object sender, EventArgs e)
+        {
+            DBUtility.OpenCurrentLibrarySourceFolder();
+        }
+
+        private void checkBoxRandomize_CheckedChanged(object sender, EventArgs e)
+        {
+            Searchbar.RepeatLastSearch();
+        }
+
+        private void toolStripMenuItemAddNewLibrary_Click(object sender, EventArgs e)
+        {
+            DBUtility.AddNewLibrary();
         }
     }
 }
