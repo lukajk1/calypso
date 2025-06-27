@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Calypso._Backend
 {
-    internal class TagNode
+    public class TagNode
     {
         public string Tag { get; set; }
         public List<TagNode> Children { get; set; } = new();

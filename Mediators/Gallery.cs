@@ -11,7 +11,7 @@ using System.Data;
 using Calypso.UI;
 namespace Calypso
 {
-    internal class Gallery
+    internal partial class Gallery
     {
         static FlowLayoutPanel? flowLayoutGallery; // FlowLayoutPanel is non-nullable by default, idk if it matters or not
         static ContextMenuStrip? imageContextMenuStrip; 
@@ -24,14 +24,30 @@ namespace Calypso
         static List<TileTag> selectedTiles = new();
         static List<TileTag> allTiles = new();
 
-        private static float _loadProgress = 0f;
         private static int pbPerRow = 0;
+        private static float _loadProgress = 0f;
         public static float LoadProgress
         {
             get => _loadProgress;
             set
             {
                 mainW.toolStripProgressBar1.Value = (int)(value * 100f);
+
+                if (value == 0) mainW.toolStripProgressBar1.Visible = false;
+                else mainW.toolStripProgressBar1.Visible = true;
+            }
+        }
+        private static float _zoom = 1f;
+        public static float Zoom
+        {
+            get => _zoom;
+            set
+            {
+                if (value > 0)
+                {
+                    _zoom = value;
+                    SetZoom(value);
+                }
             }
         }
 
@@ -53,7 +69,8 @@ namespace Calypso
             flowLayoutGallery.AllowDrop = true;
             flowLayoutGallery.DragEnter += flowLayoutGallery_DragEnter;
             flowLayoutGallery.DragDrop += flowLayoutGallery_DragDrop; 
-            flowLayoutGallery.SizeChanged += FlowLayoutGallery_SizeChanged;
+            flowLayoutGallery.SizeChanged += FlowLayoutGallery_SizeChanged; 
+            flowLayoutGallery.MouseWheel += FlowLayoutGallery_MouseWheel;
         }
 
         public static void Populate(List<ImageData> results)
@@ -63,6 +80,7 @@ namespace Calypso
             GenerateGallery(results);
 
             resultsCountLabel.Text = $"Results: {results.Count}";
+            mainW.toolStripLabelThumbnailSize.Text = $"Thumbnail Height: {GlobalValues.DefaultThumbnailSize}px";
         }
         private static void GenerateGallery(List<ImageData> results)
         {
@@ -90,6 +108,35 @@ namespace Calypso
                 control.Dispose(); // Dispose of the control to release its resources
             }
         }
+        public static void ZoomFromWheel(MouseEventArgs e)
+        {
+            if ((Control.ModifierKeys & Keys.Control) == Keys.Control)
+            {
+                if (e.Delta > 0)
+                    Gallery.Zoom += 0.2f;
+                else if (e.Delta < 0)
+                    Gallery.Zoom -= 0.2f;
+            }
+        }
+        private static void SetZoom(float magnifyingFactor)
+        {
+            int thumbSize = (int)(GlobalValues.DefaultThumbnailSize * magnifyingFactor);
+
+            foreach (TileTag tile in allTiles)
+            {
+                tile._PictureBox.Size = new Size(thumbSize, thumbSize);
+
+                Label? label = tile._Container.Controls.OfType<Label>().FirstOrDefault();
+                int labelHeight = label?.Height ?? 20;
+
+                tile._Container.Width = thumbSize + 10;
+                tile._Container.Height = thumbSize + labelHeight + 10;
+            }
+
+            mainW.toolStripLabelThumbnailSize.Text = $"Thumbnail Height: {thumbSize}px";
+            flowLayoutGallery.PerformLayout();
+        }
+
 
         private static void ClearSelection()
         {
@@ -112,16 +159,20 @@ namespace Calypso
 
         public static void SelectAll()
         {
-            foreach (Control control in flowLayoutGallery.Controls)
+            ClearSelection(); // Optional, depending on behavior
+
+            foreach (TileTag tTag in allTiles)
             {
-                if (control is Panel panel &&
-                    panel.Controls.OfType<PictureBox>().FirstOrDefault() is PictureBox pb &&
-                    pb.Tag is TileTag tTag)
-                {
-                    AddToSelection(tTag);
-                }
+                tTag._Container.BorderStyle = BorderStyle.FixedSingle;
             }
+
+            selectedTiles = new List<TileTag>(allTiles);
+            selectedCountLabel.Text = $"Selected: ({selectedTiles.Count})";
+
+            if (selectedTiles.Count > 0)
+                ImageInfoPanel.Display(selectedTiles[0]._ImageData);
         }
+
 
         public static void AddCard(ImageData imgData)
         {
@@ -131,14 +182,14 @@ namespace Calypso
                 TextAlign = ContentAlignment.MiddleCenter,
                 Dock = DockStyle.Bottom,
                 AutoSize = false,
-                Width = GlobalValues.ThumbnailHeight,
+                Width = GlobalValues.DefaultThumbnailSize,
                 Height = 20
             };
 
             Panel container = new Panel
             {
-                Width = GlobalValues.ThumbnailHeight + 10,
-                Height = GlobalValues.ThumbnailHeight + 30,
+                Width = GlobalValues.DefaultThumbnailSize + 10,
+                Height = GlobalValues.DefaultThumbnailSize + 30,
                 Margin = new Padding(5)
             };
 
@@ -147,7 +198,7 @@ namespace Calypso
             {
                 Cursor = Cursors.Hand,
                 SizeMode = PictureBoxSizeMode.Zoom,
-                Size = new Size(GlobalValues.ThumbnailHeight, GlobalValues.ThumbnailHeight),
+                Size = new Size(GlobalValues.DefaultThumbnailSize, GlobalValues.DefaultThumbnailSize),
                 Margin = new Padding(5)
             };
             using var stream = new FileStream(imgData.ThumbnailPath, FileMode.Open, FileAccess.Read);
@@ -194,126 +245,6 @@ namespace Calypso
             Database.DeleteImageData(selectedTiles.Select(t => t._ImageData).ToList());
 
             selectedTiles.Clear();
-        }
-
-
-        // events ------------------------------------------------------------------------------------------
-        private static void flowLayoutGallery_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                e.Effect = DragDropEffects.Copy;
-        }
-
-        private static void flowLayoutGallery_DragDrop(object sender, DragEventArgs e)
-        {
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            List<ImageData> myList = Database.AddFilesToLibrary(files);
-            
-            foreach (ImageData img in myList)
-            {
-                AddCard(img);
-                Debug.WriteLine("this was called");
-            }
-        }
-
-        private static void FlowLayoutGallery_SizeChanged(object sender, EventArgs e)
-        {
-            CountPictureBoxesPerRow();
-        }
-
-        const int DragThreshold = 17; // (px) less sensitive than system default to avoid false positives more 
-        private static void AddDraggableHandlers(PictureBox pb)
-        {
-            Point dragStartPoint = Point.Empty;
-
-            pb.MouseDown += (s, e) =>
-            {
-                if (e.Button == MouseButtons.Left)
-                    dragStartPoint = e.Location;
-            };
-
-            pb.MouseMove += (s, e) =>
-            {
-                if (e.Button == MouseButtons.Left &&
-                    dragStartPoint != Point.Empty &&
-                    (Math.Abs(e.X - dragStartPoint.X) > DragThreshold ||
-                     Math.Abs(e.Y - dragStartPoint.Y) > DragThreshold))
-                {
-                    if (pb.Tag is TileTag tTag && File.Exists(tTag._ImageData.FullResPath))
-                    {
-                        pb.DoDragDrop(
-                            new DataObject(DataFormats.FileDrop, new string[] { tTag._ImageData.FullResPath }),
-                            DragDropEffects.Copy);
-                        dragStartPoint = Point.Empty;
-                    }
-                }
-            };
-        }
-
-        private static void PictureBox_DoubleClick(object? sender, EventArgs e)
-        {
-            if (sender is PictureBox pb && pb.Tag is TileTag tTag && File.Exists(tTag._ImageData.FullResPath))
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = tTag._ImageData.FullResPath,
-                    UseShellExecute = true
-                });
-            }
-        }
-        private static void PictureBox_MouseClick(object sender, MouseEventArgs e)
-        {
-            if (sender is not PictureBox pb || pb.Tag is not TileTag tTag)
-                return;
-
-            bool ctrlHeld = (Control.ModifierKeys & Keys.Control) == Keys.Control;
-
-            if (!ctrlHeld) ClearSelection();
-            AddToSelection(tTag);
-
-            //if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
-            //{
-                
-            //}
-
-            if (e.Button == MouseButtons.Right && File.Exists(tTag._ImageData.FullResPath))
-            {
-                TagEditManager.Open(selectedTiles);
-            }
-        }
-
-        public static void ArrowSelect(Keys keyData)
-        {
-            if (selectedTiles.Count != 1) return;
-
-            int index = allTiles.IndexOf(selectedTiles[0]);
-            int newIndex = 0;
-
-            switch(keyData)
-            {
-                case Keys.Left:
-                    newIndex = index - 1;
-                    break;
-                case Keys.Right:
-                    newIndex = index + 1;
-                    break;
-                case Keys.Up:
-                    newIndex = index - pbPerRow;
-                    break;
-                case Keys.Down:
-                    newIndex = index + pbPerRow;
-                    break;
-            }
-
-            if (newIndex >= 0 && newIndex < allTiles.Count)
-            {
-                ClearSelection();
-                AddToSelection(allTiles[newIndex]);
-            }
-            else
-            {
-                return;
-            }
         }
 
         public static int CountPictureBoxesPerRow()

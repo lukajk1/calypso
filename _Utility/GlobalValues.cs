@@ -8,6 +8,7 @@ namespace Calypso
 {
     internal class GlobalValues
     {
-        public static int ThumbnailHeight = 150;
+        public static int DefaultThumbnailSize = 150;
+        public static int ThumbnailSize = 250;
     }
 }

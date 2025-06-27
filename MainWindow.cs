@@ -12,6 +12,7 @@ namespace Calypso
             InitializeComponent();
             this.KeyPreview = true;
             this.FormClosed += MainWindow_FormClosed;
+            this.MouseWheel += MainWindow_MouseWheel;
 
             Mediator.Init(this);
         }
@@ -21,7 +22,7 @@ namespace Calypso
             Control focused = Form.ActiveForm?.ActiveControl;
 
             bool searchBoxFocused = focused == searchBox;
-            Debug.WriteLine(focused.Name);
+            //Debug.WriteLine(focused.Name);
             // single key shortcuts --------------------------------------------------------------------------------
             if (keyData == Keys.R)
             {
@@ -124,7 +125,11 @@ namespace Calypso
             {
                 Gallery.ArrowSelect(keyData);
             }
-
+            else if (keyData == Keys.Enter)
+            {
+                // eh
+                return true;
+            }
 
             // shift
             else if ((keyData & (Keys.Control | Keys.Shift)) == (Keys.Control | Keys.Shift))
@@ -142,12 +147,15 @@ namespace Calypso
 
             return base.ProcessCmdKey(ref msg, keyData);
         }
+        private void MainWindow_MouseWheel(object sender, MouseEventArgs e)
+        {
+            Gallery.ZoomFromWheel(e);
+        }
 
         private void OpenTagModifier()
         {
             TagEditor tagM = new TagEditor(this);
             tagM.Show();
-
         }
         public static void PictureBox_DoubleClick(object sender, EventArgs e)
         {
@@ -161,23 +169,24 @@ namespace Calypso
                 });
             }
         }
-
-        public void LoadSession(SessionData session)
+        public void LoadSession(Session session)
         {
             this.Height = session.WindowHeight;
             this.Width = session.WindowWidth;
             this.checkBoxRandomize.Checked = session.RandomiseChecked;
             this.WindowState = session.WindowState;
+            Database.ActiveLibrary = session.LastActiveLibrary;
         }
 
         private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
         {
-            SessionData session = new SessionData()
+            Session session = new Session()
             {
                 WindowHeight = this.Height,
                 WindowWidth = this.Width,
                 RandomiseChecked = this.checkBoxRandomize.Checked,
-                WindowState = this.WindowState
+                WindowState = this.WindowState,
+                LastActiveLibrary = Database.ActiveLibrary
             };
             Database.SaveSession(session);
         }

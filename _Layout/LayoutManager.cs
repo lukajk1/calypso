@@ -10,8 +10,8 @@ namespace Calypso
     internal static class LayoutManager
     {
 
-        public static LayoutData DefaultLayout = 
-            new LayoutData()
+        public static Layout DefaultLayout = 
+            new Layout()
             {
                 MetadataVSplitter_Ratio = 0.76f,
                 LeftPanelHSplitter_Ratio = 0.2f,
@@ -21,8 +21,8 @@ namespace Calypso
                 RightPanel_IsOpen = true
             };
 
-        public static LayoutData LargeWindow =
-            new LayoutData()
+        public static Layout LargeWindow =
+            new Layout()
             {
                 MetadataVSplitter_Ratio = 0.74f,
                 LeftPanelHSplitter_Ratio = 0.28f,
@@ -52,7 +52,7 @@ namespace Calypso
             SetLayout(DefaultLayout);
         }
 
-        public static void SetLayout(LayoutData ld)
+        public static void SetLayout(Layout ld)
         {
             SetPanel(masterSplitContainer, 2, ld.RightPanel_IsOpen);
             SetPanel(tagTreeSplitContainer, 1, ld.LeftPanel_IsOpen);

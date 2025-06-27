@@ -16,8 +16,8 @@ namespace Calypso
 {
     internal static partial class Database
     {
-        public static List<LibraryData> Libraries = new();
-        public static LibraryData? ActiveLibrary;
+        public static List<Library> Libraries = new();
+        public static Library? ActiveLibrary;
 
         private static string jsonLibraryList; // keep this, no need to move this field out of here.
         private static string appdataDirPath;
@@ -30,7 +30,7 @@ namespace Calypso
         public static Dictionary<string, int> tagDict = new();
 
         // events
-        public static event Action<LibraryData> OnNewLibraryLoaded;
+        public static event Action<Library> OnNewLibraryLoaded;
         public static void Init(out bool jsonExists)
         {
             appdataDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CalypsoManager");
@@ -44,18 +44,12 @@ namespace Calypso
         }
         public static bool ReadDBJson()
         {
-            if (Util.TryDeserializeFromFile<List<LibraryData>>(jsonLibraryList, out Libraries))
+            if (Util.TryDeserializeFromFile<List<Library>>(jsonLibraryList, out Libraries))
             {
-                ActiveLibrary = Libraries[0];
-
-                foreach (LibraryData lib in Libraries)
+                if (ActiveLibrary == null)
                 {
-                    if (lib.LastActive)
-                    {
-                        ActiveLibrary = lib;
-                    }
+                    ActiveLibrary = Libraries[0];
                 }
-
                 return true;
             }
             else
@@ -70,15 +64,14 @@ namespace Calypso
 
             if (PromptUserForLibrary("No library reference was found. Specify a directory now?", out libraryPath))
             {
-                ActiveLibrary = new LibraryData()
+                ActiveLibrary = new Library()
                 {
                     Name = Path.GetFileName(libraryPath.TrimEnd(Path.DirectorySeparatorChar)),
-                    Dirpath = libraryPath,
-                    LastActive = true
+                    Dirpath = libraryPath
                 };
 
                 Libraries.Add(ActiveLibrary); // assume Libraries is null
-                Util.SerializeToFile<List<LibraryData>>(Libraries, jsonLibraryList);
+                Util.SerializeToFile<List<Library>>(Libraries, jsonLibraryList);
 
                 return true;
             }
@@ -89,13 +82,13 @@ namespace Calypso
 
         }
 
-        public static bool RetrieveSession(out SessionData sessionData)
+        public static bool RetrieveSession(out Session sessionData)
         {
             sessionData = default;
 
             if (File.Exists(jsonSession))
             {
-                if (Util.TryDeserializeFromFile<SessionData>(jsonSession, out sessionData))
+                if (Util.TryDeserializeFromFile<Session>(jsonSession, out sessionData))
                 {
                     return true;
                 }
@@ -103,9 +96,9 @@ namespace Calypso
 
             return false;
         }
-        public static void SaveSession(SessionData session)
+        public static void SaveSession(Session session)
         {
-            Util.SerializeToFile<SessionData>(session, jsonSession);
+            Util.SerializeToFile<Session>(session, jsonSession);
         }
 
         private static bool PromptUserForLibrary(string message, out string libraryPath)
@@ -133,7 +126,7 @@ namespace Calypso
         {
             LoadLibrary(ActiveLibrary);
         }
-        public static void LoadLibrary(LibraryData lib)
+        public static void LoadLibrary(Library lib)
         {
             ActiveLibrary = lib;
 
@@ -190,7 +183,7 @@ namespace Calypso
             }
             else
             {
-                using Image thumb = Util.CreateThumbnail(filepath, GlobalValues.ThumbnailHeight);
+                using Image thumb = Util.CreateThumbnail(filepath, GlobalValues.ThumbnailSize);
                 ImageFormat format = Util.GetImageFormatFromExtension(thumbSavePath);
                 thumb.Save(thumbSavePath, format);
 
@@ -203,20 +196,14 @@ namespace Calypso
             string libPath;
             if (PromptUserForLibrary("Add new library?", out libPath))
             {
-                LibraryData newLib = new LibraryData()
+                Library newLib = new Library()
                 {
                     Name = Path.GetFileName(libPath.TrimEnd(Path.DirectorySeparatorChar)),
-                    Dirpath = libPath,
-                    LastActive = true,
+                    Dirpath = libPath
                 };
 
-                foreach (LibraryData libs in Libraries) 
-                {
-                    libs.LastActive = false;
-                }
-
                 Libraries.Add(newLib);
-                Util.SerializeToFile<List<LibraryData>>(Libraries, jsonLibraryList);
+                Util.SerializeToFile<List<Library>>(Libraries, jsonLibraryList);
 
                 LoadLibrary(newLib);
             }

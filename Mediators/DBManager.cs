@@ -10,7 +10,7 @@ namespace Calypso
     internal static class DBManager
     {
         private static MainWindow mainW;
-        private static SessionData Session;
+        private static Session Session;
         public static void Init(MainWindow mainW)
         {
             DBManager.mainW = mainW;
@@ -24,6 +24,13 @@ namespace Calypso
             bool jsonExists;
             Database.Init(out jsonExists);
 
+            Session sessionData = default;
+
+            if (Database.RetrieveSession(out sessionData))
+            {
+                mainW.LoadSession(sessionData);
+            }
+
             if (jsonExists && Database.ReadDBJson())
             {
                 Database.LoadActiveLibrary();
@@ -35,12 +42,6 @@ namespace Calypso
             else return;
 
             PopulateLibraryUI();
-            SessionData sessionData = default;
-
-            if (Database.RetrieveSession(out sessionData))
-            {
-                mainW.LoadSession(sessionData);
-            }
 
         }
         public static void LoadLibrary(int num)
@@ -50,7 +51,7 @@ namespace Calypso
                 Database.LoadLibrary(Database.Libraries[num-1]);
             }
         }
-        static void OnNewLibraryLoaded(LibraryData lib)
+        static void OnNewLibraryLoaded(Library lib)
         {
             Searchbar.Search("all");
             mainW.Text = Mediator.MainWindowTitle + " - " + lib.Name;
@@ -72,7 +73,7 @@ namespace Calypso
                 mainW.openExistingLibraryToolStripMenuItem.DropDownItems.Remove(item);
             }
 
-            foreach (LibraryData lib in Database.Libraries)
+            foreach (Library lib in Database.Libraries)
             {
                 ToolStripMenuItem newItem = new ToolStripMenuItem(lib.Name);
                 //if (lib == DBUtility.ActiveLibrary) newItem.Enabled = false;

@@ -145,25 +145,25 @@
             // 
             toolStripMenuItem8.Enabled = false;
             toolStripMenuItem8.Name = "toolStripMenuItem8";
-            toolStripMenuItem8.Size = new Size(180, 22);
+            toolStripMenuItem8.Size = new Size(170, 22);
             toolStripMenuItem8.Text = "Library 1 (Current)";
             // 
             // toolStripMenuItem7
             // 
             toolStripMenuItem7.Name = "toolStripMenuItem7";
-            toolStripMenuItem7.Size = new Size(180, 22);
+            toolStripMenuItem7.Size = new Size(170, 22);
             toolStripMenuItem7.Text = "Library 2";
             // 
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(177, 6);
+            toolStripSeparator3.Size = new Size(167, 6);
             toolStripSeparator3.Tag = "no-delete";
             // 
             // toolStripMenuItemAddNewLibrary
             // 
             toolStripMenuItemAddNewLibrary.Name = "toolStripMenuItemAddNewLibrary";
-            toolStripMenuItemAddNewLibrary.Size = new Size(180, 22);
+            toolStripMenuItemAddNewLibrary.Size = new Size(170, 22);
             toolStripMenuItemAddNewLibrary.Tag = "no-delete";
             toolStripMenuItemAddNewLibrary.Text = "&Add New Library";
             toolStripMenuItemAddNewLibrary.Click += toolStripMenuItemAddNewLibrary_Click;
@@ -297,6 +297,7 @@
             // 
             toolStripProgressBar1.Name = "toolStripProgressBar1";
             toolStripProgressBar1.Size = new Size(100, 16);
+            toolStripProgressBar1.Visible = false;
             // 
             // statusLabelResultsCount
             // 
