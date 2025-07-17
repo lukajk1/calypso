@@ -1,6 +1,7 @@
 ﻿using Calypso.UI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ namespace Calypso
 
         static int previousSplitterDistance;
         static bool isCollapsed;
+        static TreeNode selectedNode;
+
         public static void Init(MainWindow mainW)
         {
             TreesPanel.mainW = mainW;
@@ -25,7 +28,7 @@ namespace Calypso
             nodeRand.Tag = "rtag";
         }
 
-        public static void Populate(Dictionary<string, int> tagData, int untaggedEntriesCount, int totalEntriesCount)
+        public static void Populate(List<TagNode> tagNodes, int untaggedEntriesCount, int totalEntriesCount)
         {
             tagTree.Nodes.Clear();
 
@@ -34,13 +37,7 @@ namespace Calypso
             searchTree.NodeMouseClick -= OnTagNodeClick;
             searchTree.NodeMouseClick += OnTagNodeClick;
 
-            foreach (KeyValuePair<string, int> kvp in tagData)
-            {
-                TreeNode node = new TreeNode($"#{kvp.Key} ({kvp.Value.ToString()})");
-
-                node.Tag = kvp.Key;
-                tagTree.Nodes.Add(node);
-            }
+            GenerateTagTree(tagNodes);
 
             TreeNode separator = new TreeNode("──────────");
             separator.ForeColor = Color.Gray;
@@ -52,7 +49,58 @@ namespace Calypso
 
             TreeNode nodeAll = tagTree.Nodes.Insert(0, $"All Images ({totalEntriesCount.ToString()})");
             nodeAll.Tag = "all";
+
+            tagTree.ExpandAll(); 
+            
+
+            tagTree.BeforeCollapse += (s, e) =>
+            {
+                e.Cancel = true; // Prevent collapsing
+            };
         }
+        private static void GenerateTagTree(List<TagNode> tagNodes)
+        {
+            tagTree.BeginUpdate();
+            tagTree.Nodes.Clear();
+
+            foreach (TagNode node in tagNodes)
+            {
+                TreeNode treeNode = CreateTreeNodeRecursive(node);
+                tagTree.Nodes.Add(treeNode);
+            }
+
+            tagTree.ExpandAll();
+            tagTree.EndUpdate();
+        }
+
+        private static TreeNode CreateTreeNodeRecursive(TagNode node)
+        {
+            string displayText = $"#{node.Tag} ({node.ContentCount})";
+            TreeNode treeNode = new TreeNode(displayText)
+            {
+                Tag = node.Tag
+            };
+
+            foreach (var child in node.Children)
+            {
+                treeNode.Nodes.Add(CreateTreeNodeRecursive(child));
+            }
+
+            return treeNode;
+        }
+
+
+
+        private static string GetLastSegment(string dottedKey)
+        {
+            if (string.IsNullOrEmpty(dottedKey))
+                return dottedKey;
+
+            int lastDotIndex = dottedKey.LastIndexOf('.');
+            return lastDotIndex >= 0 ? dottedKey.Substring(lastDotIndex + 1) : dottedKey;
+        }
+
+
         private void treeView1_BeforeSelect(object sender, TreeViewCancelEventArgs e)
         {
             if (e.Node.Tag as string == "unselectable")
@@ -62,15 +110,64 @@ namespace Calypso
         }
         private static void OnTagNodeClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            TreeNode clickedNode = e.Node;
-            string tagName = clickedNode.Tag as string;
+            selectedNode = e.Node;
 
-            // Only handle clicks on tag nodes (nodes with Tag data)
-            if (tagName != null)
+            if (e.Button == MouseButtons.Left)
             {
-                //MessageBox.Show($"Clicked on tag: {tagName}");
-                Searchbar.Search(tagName);
+                string tagName = selectedNode.Tag as string;
+
+                // Only handle clicks on tag nodes (nodes with Tag data)
+                if (tagName != null)
+                {
+                    //MessageBox.Show($"Clicked on tag: {tagName}");
+                    Searchbar.Search(tagName);
+                }
             }
+            else if (e.Button == MouseButtons.Right)
+            {
+                mainW.contextMenuTagTree.Show(tagTree, e.Location);
+            }
+        }
+
+        public static void RenameTag(object sender)
+        {
+            OpenPrompt();
+            //new TextPrompt(mainW, $"Renaming {selectedNode.Tag}").Show();
+
+        }
+        public static void DeleteTag(object sender)
+        {
+            Util.ShowConfirmDialog("This tag has x children. Proceed to delete?");
+
+        }
+        public static void AddChildNode(object sender)
+        {
+            Debug.WriteLine("childnode called");
+
+            string tagName = selectedNode.Tag as string;
+            string newTag = $"{tagName}.{OpenPrompt()}";
+            Debug.WriteLine(newTag);
+        }
+
+        public static string OpenPrompt()
+        {
+            using (var prompt = new TextPrompt(mainW, "Enter new tag name:"))
+            {
+                if (prompt.ShowDialog() == DialogResult.OK)
+                {
+                    return prompt.ResultText;
+                    //Debug.WriteLine("User entered: " + userInput);
+                }
+                else
+                {
+                    return string.Empty;
+                    //.WriteLine("User cancelled input.");
+                }
+            }
+        }
+
+        public static void PromptAddTag()
+        {
         }
     }
 }

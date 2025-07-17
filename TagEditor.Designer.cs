@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            checkedListBox1 = new CheckedListBox();
+            checkedListBoxTags = new CheckedListBox();
             statusStrip1 = new StatusStrip();
             panel1 = new Panel();
             label1 = new Label();
@@ -41,15 +41,15 @@
             // 
             // checkedListBox1
             // 
-            checkedListBox1.BackColor = SystemColors.ControlLight;
-            checkedListBox1.BorderStyle = BorderStyle.None;
-            checkedListBox1.Dock = DockStyle.Fill;
-            checkedListBox1.FormattingEnabled = true;
-            checkedListBox1.Items.AddRange(new object[] { "item 1", "item 2" });
-            checkedListBox1.Location = new Point(8, 8);
-            checkedListBox1.Name = "checkedListBox1";
-            checkedListBox1.Size = new Size(188, 313);
-            checkedListBox1.TabIndex = 0;
+            checkedListBoxTags.BackColor = SystemColors.ControlLight;
+            checkedListBoxTags.BorderStyle = BorderStyle.None;
+            checkedListBoxTags.Dock = DockStyle.Fill;
+            checkedListBoxTags.FormattingEnabled = true;
+            checkedListBoxTags.Items.AddRange(new object[] { "item 1", "item 2" });
+            checkedListBoxTags.Location = new Point(8, 8);
+            checkedListBoxTags.Name = "checkedListBox1";
+            checkedListBoxTags.Size = new Size(188, 313);
+            checkedListBoxTags.TabIndex = 0;
             // 
             // statusStrip1
             // 
@@ -102,7 +102,7 @@
             // panel2
             // 
             panel2.BackColor = SystemColors.ControlLight;
-            panel2.Controls.Add(checkedListBox1);
+            panel2.Controls.Add(checkedListBoxTags);
             panel2.Dock = DockStyle.Fill;
             panel2.Location = new Point(0, 0);
             panel2.Name = "panel2";
@@ -132,7 +132,7 @@
 
         #endregion
 
-        private CheckedListBox checkedListBox1;
+        private CheckedListBox checkedListBoxTags;
         private StatusStrip statusStrip1;
         private Panel panel1;
         public Button buttonAddTag;

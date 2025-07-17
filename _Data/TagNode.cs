@@ -4,11 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Calypso._Backend
+namespace Calypso
 {
     public class TagNode
     {
         public string Tag { get; set; }
+        public int ContentCount { get; set; } = 0;
         public List<TagNode> Children { get; set; } = new();
     }
 }

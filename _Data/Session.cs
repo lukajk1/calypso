@@ -13,5 +13,6 @@ namespace Calypso
         public bool RandomiseChecked { get; set; }
         public FormWindowState WindowState { get; set; }
         public Library LastActiveLibrary { get; set; }
+        public float ZoomFactor { get; set; }
     }
 }

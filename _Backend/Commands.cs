@@ -21,7 +21,7 @@ namespace Calypso.UI
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string[] selectedFiles = openFileDialog.FileNames;
-                    Database.CopyImageFilesToLibraryDir(selectedFiles);
+                    DB.CopyImageFilesToLibraryDir(selectedFiles);
                 }
             }
         }

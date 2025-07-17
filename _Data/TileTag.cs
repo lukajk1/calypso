@@ -11,5 +11,6 @@ namespace Calypso
         public ImageData _ImageData;
         public Panel _Container;
         public PictureBox _PictureBox;
+        public PooledTile _PooledTile;
     }
 }

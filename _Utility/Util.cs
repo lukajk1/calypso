@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 namespace Calypso
 {
+    public delegate void ConfirmAction();
+
     internal class Util
     {
         public static void ShowErrorDialog(string message)
@@ -21,6 +23,14 @@ namespace Calypso
                 "Notice",
                 MessageBoxButtons.OKCancel,
                 MessageBoxIcon.Information);
+        }
+        public static DialogResult ShowConfirmDialog(string message)
+        {
+            return MessageBox.Show(
+                message,
+                "Confirm",
+                MessageBoxButtons.OKCancel,
+                MessageBoxIcon.Question);
         }
 
 
@@ -36,13 +46,13 @@ namespace Calypso
                                .ToArray();
         }
 
-        public static void SerializeToFile<T>(T obj, string filePath)
+        public static void Save<T>(T obj, string filePath)
         {
             string json = JsonSerializer.Serialize(obj);
             File.WriteAllText(filePath, json);
         }
 
-        public static bool TryDeserializeFromFile<T>(string filePath, out T result)
+        public static bool TryLoad<T>(string filePath, out T result)
         {
             result = default;
             try

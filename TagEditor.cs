@@ -16,9 +16,8 @@ namespace Calypso
     {
         private MainWindow? mainW;
         private ImageData currentImageData;
-        Dictionary<string, int> tagDict;
-        Dictionary<string, int> existingTagCountOnSelection = new();
-        List<TileTag> currentSelection = new();
+        Dictionary<string, int> TagCountInSelection = new();
+        List<TileTag> selection = new();
         List<string> tagsUnchecked = new();
         List<string> multipleSelectionTagsChecked = new();
         public TagEditor(MainWindow mainW)
@@ -46,8 +45,8 @@ namespace Calypso
                 }
             };
 
-            checkedListBox1.CheckOnClick = true; 
-            checkedListBox1.KeyDown += CheckedListBox1_KeyDown;
+            checkedListBoxTags.CheckOnClick = true; 
+            checkedListBoxTags.KeyDown += checkedListBoxTags_KeyDown;
 
             this.FormClosing += (s, e) =>
             {
@@ -55,77 +54,66 @@ namespace Calypso
                 CloseForm();
             };
         }
-        private void TagEditor_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Escape)
-            {
-                CloseForm();
-                e.Handled = true;
-            }
-        }
 
-        private void CloseForm()
+        public void Populate(List<TileTag> selection)
         {
-            this.Hide();
-        }
-        public void Populate(Dictionary<string, int> dbTagDict, List<TileTag> selection)
-        {
-            currentSelection = selection;
-            checkedListBox1.Items.Clear();
-            this.tagDict = dbTagDict;
+            this.selection = selection;
+            checkedListBoxTags.Items.Clear();
 
-            this.existingTagCountOnSelection.Clear();
+            this.TagCountInSelection.Clear();
 
             foreach (TileTag tTag in selection)
             {
                 foreach (string tag in tTag._ImageData.Tags)
                 {
-                    if (existingTagCountOnSelection.ContainsKey(tag))
+                    if (TagCountInSelection.ContainsKey(tag))
                     {
-                        existingTagCountOnSelection[tag]++;
+                        TagCountInSelection[tag]++;
                     }
                     else
                     {
-                        existingTagCountOnSelection.Add(tag, 1);
+                        TagCountInSelection.Add(tag, 1);
                     }
-
-
-                    // remove item from dict to prevent the same tag being added twice
                 }
             }
-
 
             tagsUnchecked.Clear();
             multipleSelectionTagsChecked.Clear();
 
-            foreach (var kvp in existingTagCountOnSelection)
+            foreach (var kvp in TagCountInSelection)
             {
                 bool isChecked = (kvp.Value == selection.Count);
-                if (isChecked) multipleSelectionTagsChecked.Add(kvp.Key);
 
-                checkedListBox1.Items.Add($"# {kvp.Key} ({kvp.Value})", isChecked);
+                if (isChecked)
+                {
+                    multipleSelectionTagsChecked.Add(kvp.Key);
+                }
+
+                checkedListBoxTags.Items.Add($"# {kvp.Key} ({kvp.Value})", isChecked);
 
             }
 
-
-            foreach (var kvp in dbTagDict)
+            // add tags not in selection
+            foreach (var kvp in DB.TagDict)
             {
-                if (!existingTagCountOnSelection.ContainsKey(kvp.Key))
-                    checkedListBox1.Items.Add("#" + kvp.Key, false);
+                if (!TagCountInSelection.ContainsKey(kvp.Key))
+                    checkedListBoxTags.Items.Add("#" + kvp.Key, false);
             }
         }
-        private void CheckedListBox1_KeyDown(object sender, KeyEventArgs e)
+
+        // handle tag deletion
+        private void checkedListBoxTags_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Delete && checkedListBox1.SelectedItem != null)
+            if (e.KeyCode == Keys.Delete && checkedListBoxTags.SelectedItem != null)
             {
-                string tag = checkedListBox1.SelectedItem.ToString();
+                string tag = checkedListBoxTags.SelectedItem.ToString();
                 if (tag != null && tag.StartsWith("#"))
                     tag = tag.Substring(1);
 
-                checkedListBox1.Items.Remove(checkedListBox1.SelectedItem);
+                checkedListBoxTags.Items.Remove(checkedListBoxTags.SelectedItem);
 
-                Database.RemoveTag(tag);
-                Database.GenDictsAndSaveLibrary();
+                DB.RemoveTag(tag);
+                DB.GenDictsAndSaveLibrary();
                 e.Handled = true;
             }
         }
@@ -139,7 +127,7 @@ namespace Calypso
 
             if (tag != string.Empty)
             {
-                if (tagDict.ContainsKey(tag))
+                if (DB.TagDict.ContainsKey(tag))
                 {
                     mainW.Activate();
                     mainW.Focus();
@@ -148,60 +136,41 @@ namespace Calypso
                 }
                 else
                 {
-                    tagDict.Add(tag, 1);
-                    checkedListBox1.Items.Add("#" + tag, true);
+                    checkedListBoxTags.Items.Add("#" + tag, true);
                 }
             }
 
         }
 
-
         private void OnLossOfFocus(object sender, EventArgs e)
         {
-            List<string> checkedTags = checkedListBox1.CheckedItems
+            List<string> checkedTags = checkedListBoxTags.CheckedItems
                 .Cast<string>()
                 .Select(s => s.StartsWith("#") ? s.Substring(1) : s)
                 .Select(s => s.TrimEnd().Split(' ')[0])
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
-            List<string> removeTags = new();
-
-            foreach (var tag in multipleSelectionTagsChecked)
+            foreach (TileTag tTag in selection)
             {
-                if (!checkedTags.Contains(tag))
-                {
-                    removeTags.Add(tag);
-                }
+                tTag._ImageData.SetTagList(checkedTags);
             }
 
-            if (currentSelection.Count == 1)
-            {
-                currentSelection[0]._ImageData.SetTags(checkedTags);
-            }
-            else
-            {
-                foreach (TileTag tTag in currentSelection)
-                {
-                    tTag._ImageData.SetTagsOnlyAdd(checkedTags);
-                    tTag._ImageData.RemoveTags(removeTags);
-                }
-                //foreach (var tag in existingTagCountOnSelection)
-                //{
-                //    if (!checkedTags.Contains(tag.Key) && tag.Value == currentSelection.Count)
-                //    {
-                //        foreach (var tTag in currentSelection)
-                //        {
-                //            tTag._ImageData.RemoveTags(tag.Key);
-                //        }
-                //    }
-                //}
-
-            }
-
-            Database.GenDictsAndSaveLibrary();
+            DB.GenDictsAndSaveLibrary();
 
             this.CloseForm();
+        }
+        private void TagEditor_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                CloseForm();
+                e.Handled = true;
+            }
+        }
+        private void CloseForm()
+        {
+            this.Hide();
         }
     }
 }

@@ -8,17 +8,24 @@ using System.Threading.Tasks;
 
 namespace Calypso
 {
+    public enum Pane
+    {
+        TagSideTab, 
+        Gallery, 
+        Searchbar
+    }
     internal static class Mediator
     {
         private static MainWindow? mainW;
         public static string MainWindowTitle = "Calypso";
+        public static Pane FocusedPane;
         public static void Init(MainWindow mainW)
         {
             Mediator.mainW = mainW;
             mainW.Activate();
             mainW.Focus();
 
-            // The selected index needs to be set to 0 before the first search is run.
+            // The selected index needs to be set to 0 before the first search is run
             mainW.comboBoxResultsNum.SelectedIndex = 0;
 
             // initialize all mediators

@@ -19,9 +19,10 @@ namespace Calypso.UI
         public static void Open(List<TileTag> selection)
         {
             List<string> filenames = new();
-            foreach (var tag in selection)
+
+            foreach (var tTag in selection)
             {
-                filenames.Add(tag._ImageData.Filename);
+                filenames.Add(tTag._ImageData.Filename);
             }
 
             int last = 0;
@@ -39,7 +40,7 @@ namespace Calypso.UI
                 Window.Text = $"Tag Editor - {selection.Count} Items Selected";
             }
 
-            Window.Populate(Database.tagDict, selection);
+            Window.Populate(selection);
             Window.Show();
             Window.newTagTextBox.Focus();
         }

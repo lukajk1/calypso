@@ -26,7 +26,7 @@ namespace Calypso
         private static void flowLayoutGallery_DragDrop(object sender, DragEventArgs e)
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            List<ImageData> myList = Database.AddFilesToLibrary(files);
+            List<ImageData> myList = DB.AddFilesToLibrary(files);
             
             foreach (ImageData img in myList)
             {
@@ -69,7 +69,7 @@ namespace Calypso
             };
         }
 
-        private static void PictureBox_DoubleClick(object? sender, EventArgs e)
+        public static void PictureBox_DoubleClick(object? sender, EventArgs e)
         {
             if (sender is PictureBox pb && pb.Tag is TileTag tTag && File.Exists(tTag._ImageData.FullResPath))
             {
@@ -80,8 +80,10 @@ namespace Calypso
                 });
             }
         }
-        private static void PictureBox_MouseClick(object sender, MouseEventArgs e)
+        public static void PictureBox_MouseClick(object sender, MouseEventArgs e)
         {
+            Mediator.FocusedPane = Pane.Gallery;
+
             if (sender is not PictureBox pb || pb.Tag is not TileTag tTag)
                 return;
 
@@ -102,7 +104,7 @@ namespace Calypso
 
                         for (int i = start; i <= end; i++)
                         {
-                            AddToSelection(allTiles[i]);
+                            if (!selectedTiles.Contains(allTiles[i])) AddToSelection(allTiles[i]);
                         }
                     }
                 }

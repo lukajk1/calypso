@@ -13,7 +13,7 @@ namespace Calypso
 {
     internal partial class Gallery
     {
-        static FlowLayoutPanel? flowLayoutGallery; // FlowLayoutPanel is non-nullable by default, idk if it matters or not
+        static FlowLayoutPanel? flowLayoutGallery;
         static ContextMenuStrip? imageContextMenuStrip; 
         static MainWindow? mainW;
         static PictureBox? pictureBoxPreview;
@@ -22,7 +22,9 @@ namespace Calypso
 
         static List<ImageData> lastSearch = new();
         static List<TileTag> selectedTiles = new();
-        static List<TileTag> allTiles = new();
+        static List<TileTag> allTiles = new(); 
+        
+        private static readonly Stack<PooledTile> pooledTiles = new();
 
         private static int pbPerRow = 0;
         private static float _loadProgress = 0f;
@@ -51,12 +53,6 @@ namespace Calypso
             }
         }
 
-        public enum GalleryMode
-        {
-            Directory,
-            Tag
-        }
-
         public static void Init(MainWindow mainW)
         {
             Gallery.mainW = mainW;
@@ -82,6 +78,19 @@ namespace Calypso
             resultsCountLabel.Text = $"Results: {results.Count}";
             mainW.toolStripLabelThumbnailSize.Text = $"Thumbnail Height: {GlobalValues.DefaultThumbnailSize}px";
         }
+
+        private static PooledTile GetPooledTile()
+        {
+            return pooledTiles.Count > 0 ? pooledTiles.Pop() : new PooledTile();
+        }
+
+        private static void ReturnPooledTile(PooledTile tile)
+        {
+            tile.Reset();
+            pooledTiles.Push(tile);
+        }
+
+
         private static void GenerateGallery(List<ImageData> results)
         {
             float processedCount = 0f;
@@ -99,15 +108,22 @@ namespace Calypso
 
         private static void ClearExistingControls()
         {
-            List<Control> controlsToRemove = flowLayoutGallery.Controls.Cast<Control>().ToList();
-
-            foreach (Control control in controlsToRemove)
+            foreach (Control control in flowLayoutGallery.Controls.Cast<Control>().ToList())
             {
-                if (control is TextBox) continue;
-                flowLayoutGallery.Controls.Remove(control); // Remove from the panel
-                control.Dispose(); // Dispose of the control to release its resources
+                if (control is Panel panel &&
+                    panel.Controls.OfType<PictureBox>().FirstOrDefault() is PictureBox pb &&
+                    pb.Tag is TileTag tTag)
+                {
+                    if (pb.Tag is TileTag tileTag && tTag._PooledTile != null)
+                    {
+                        ReturnPooledTile(tileTag._PooledTile);
+                    }
+                }
             }
+
+            flowLayoutGallery.Controls.Clear();
         }
+
         public static void ZoomFromWheel(MouseEventArgs e)
         {
             if ((Control.ModifierKeys & Keys.Control) == Keys.Control)
@@ -135,6 +151,7 @@ namespace Calypso
 
             mainW.toolStripLabelThumbnailSize.Text = $"Thumbnail Height: {thumbSize}px";
             flowLayoutGallery.PerformLayout();
+            CountPictureBoxesPerRow();
         }
 
 
@@ -176,55 +193,37 @@ namespace Calypso
 
         public static void AddCard(ImageData imgData)
         {
-            Label label = new Label
-            {
-                Text = imgData.Filename,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Bottom,
-                AutoSize = false,
-                Width = GlobalValues.DefaultThumbnailSize,
-                Height = 20
-            };
+            PooledTile tile = GetPooledTile();
 
-            Panel container = new Panel
-            {
-                Width = GlobalValues.DefaultThumbnailSize + 10,
-                Height = GlobalValues.DefaultThumbnailSize + 30,
-                Margin = new Padding(5)
-            };
+            int thumbSize = GlobalValues.DefaultThumbnailSize;
+            tile.PictureBox.Size = new Size(thumbSize, thumbSize);
+            tile.Container.Width = thumbSize + 10;
+            tile.Container.Height = thumbSize + tile.Label.Height + 10;
 
+            tile.Label.Text = imgData.Filename;
 
-            PictureBox pb = new PictureBox
-            {
-                Cursor = Cursors.Hand,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Size = new Size(GlobalValues.DefaultThumbnailSize, GlobalValues.DefaultThumbnailSize),
-                Margin = new Padding(5)
-            };
             using var stream = new FileStream(imgData.ThumbnailPath, FileMode.Open, FileAccess.Read);
-            pb.Image = Image.FromStream(stream);
+            tile.PictureBox.Image = Image.FromStream(stream);
 
             TileTag tileTag = new TileTag
             {
                 _ImageData = imgData,
-                _Container = container,
-                _PictureBox = pb
+                _Container = tile.Container,
+                _PictureBox = tile.PictureBox,
+                _PooledTile = tile
             };
 
-            pb.Tag = tileTag;
+            tile.PictureBox.Tag = tileTag;
             allTiles.Add(tileTag);
 
-            pb.DoubleClick += PictureBox_DoubleClick;
-            pb.MouseClick += PictureBox_MouseClick;
-            AddDraggableHandlers(pb);
+            // Attach events
+            tile.PictureBox.DoubleClick += PictureBox_DoubleClick;
+            tile.PictureBox.MouseClick += PictureBox_MouseClick;
+            AddDraggableHandlers(tile.PictureBox);
 
-            pb.Dock = DockStyle.Top;
-            container.Controls.Add(pb);
-            container.Controls.Add(label);
-
-            flowLayoutGallery.Controls.Add(container);
-            //pb.Image.Dispose();
+            flowLayoutGallery.Controls.Add(tile.Container);
         }
+
 
         public static void DeleteSelected()
         {
@@ -242,7 +241,7 @@ namespace Calypso
                 }
             }
 
-            Database.DeleteImageData(selectedTiles.Select(t => t._ImageData).ToList());
+            DB.DeleteImageData(selectedTiles.Select(t => t._ImageData).ToList());
 
             selectedTiles.Clear();
         }
@@ -281,6 +280,24 @@ namespace Calypso
                 TagEditManager.Open(selectedTiles);
             }
         }
+
+        public static void OpenSelected()
+        {
+            Debug.WriteLine("Debug message");
+
+            foreach (TileTag tTag in selectedTiles)
+            {
+                if (File.Exists(tTag._ImageData.FullResPath))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = tTag._ImageData.FullResPath,
+                        UseShellExecute = true
+                    });
+                }
+            }
+        }
+
 
     }
 }

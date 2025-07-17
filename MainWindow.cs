@@ -15,18 +15,35 @@ namespace Calypso
             this.MouseWheel += MainWindow_MouseWheel;
 
             Mediator.Init(this);
+
+            var myList = new List<TagNode> 
+            { 
+                new() { Tag = "banana", ContentCount = 6, Children = 
+                    new() { 
+                        new() { Tag = "genz", ContentCount = 3, Children =
+                            new() {
+                                new() { Tag = "d", ContentCount = 3 }
+                            }  } 
+                    } 
+                }, 
+                new() { Tag = "pineapple", ContentCount = 6 }
+            
+            };
+
+
+            TreesPanel.Populate(myList, 15, 16);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             Control focused = Form.ActiveForm?.ActiveControl;
 
-            bool searchBoxFocused = focused == searchBox;
-            //Debug.WriteLine(focused.Name);
-            // single key shortcuts --------------------------------------------------------------------------------
+            bool searchBoxFocused = (Mediator.FocusedPane != Pane.Searchbar);
+
+            #region single key shortcuts
             if (keyData == Keys.R)
             {
-                if (!searchBox.ContainsFocus)
+                if (!searchBoxFocused)
                 {
                     LayoutManager.TogglePanel(tagTreeGallerySplitContainer, 1);
                     return true; // suppress further handling
@@ -35,7 +52,7 @@ namespace Calypso
             }
             else if (keyData == Keys.N)
             {
-                if (!searchBox.ContainsFocus)
+                if (!searchBoxFocused)
                 {
                     LayoutManager.TogglePanel(masterSplitContainer, 2);
                     return true;
@@ -43,7 +60,7 @@ namespace Calypso
             }
             else if (keyData == Keys.I)
             {
-                if (!searchBox.ContainsFocus)
+                if (!searchBoxFocused)
                 {
                     LayoutManager.TogglePanel(imageInfoHorizontalSplitContainer, 2);
                     return true;
@@ -51,7 +68,7 @@ namespace Calypso
             }
             else if (keyData == Keys.T)
             {
-                if (!searchBox.ContainsFocus)
+                if (!searchBoxFocused)
                 {
                     Gallery.OpenTagEditorByCommand();
                     return true;
@@ -60,8 +77,9 @@ namespace Calypso
 
             else if (keyData == Keys.Delete)
             {
-                Gallery.DeleteSelected();
+                if (Mediator.FocusedPane == Pane.Gallery) Gallery.DeleteSelected();
             }
+            #endregion
 
             // ctrl shortcuts --------------------------------------------------------------------------------
             if (keyData == (Keys.Control | Keys.Q))
@@ -84,7 +102,7 @@ namespace Calypso
             }
             else if (keyData == (Keys.Control | Keys.Enter))
             {
-                Database.OpenCurrentLibrarySourceFolder();
+                DB.OpenCurrentLibrarySourceFolder();
                 return true;
             }
             else if (keyData == (Keys.Control | Keys.A))
@@ -125,9 +143,14 @@ namespace Calypso
             {
                 Gallery.ArrowSelect(keyData);
             }
+
+
             else if (keyData == Keys.Enter)
             {
-                // eh
+                if (Mediator.FocusedPane == Pane.Gallery)
+                {
+                    Gallery.OpenSelected();
+                }
                 return true;
             }
 
@@ -144,7 +167,6 @@ namespace Calypso
                 }
             }
 
-
             return base.ProcessCmdKey(ref msg, keyData);
         }
         private void MainWindow_MouseWheel(object sender, MouseEventArgs e)
@@ -152,30 +174,14 @@ namespace Calypso
             Gallery.ZoomFromWheel(e);
         }
 
-        private void OpenTagModifier()
-        {
-            TagEditor tagM = new TagEditor(this);
-            tagM.Show();
-        }
-        public static void PictureBox_DoubleClick(object sender, EventArgs e)
-        {
-            if (sender is PictureBox pb && pb.Tag is string imagePath)
-            {
-                // Example: open full image in default viewer
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = imagePath,
-                    UseShellExecute = true
-                });
-            }
-        }
         public void LoadSession(Session session)
         {
             this.Height = session.WindowHeight;
             this.Width = session.WindowWidth;
             this.checkBoxRandomize.Checked = session.RandomiseChecked;
             this.WindowState = session.WindowState;
-            Database.ActiveLibrary = session.LastActiveLibrary;
+            DB.ActiveLibrary = session.LastActiveLibrary;
+            Gallery.Zoom = session.ZoomFactor;
         }
 
         private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
@@ -186,9 +192,10 @@ namespace Calypso
                 WindowWidth = this.Width,
                 RandomiseChecked = this.checkBoxRandomize.Checked,
                 WindowState = this.WindowState,
-                LastActiveLibrary = Database.ActiveLibrary
+                LastActiveLibrary = DB.ActiveLibrary,
+                ZoomFactor = Gallery.Zoom
             };
-            Database.SaveSession(session);
+            DB.SaveSession(session);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -241,7 +248,7 @@ namespace Calypso
 
         private void toolStripMenuItem1_Click_1(object sender, EventArgs e)
         {
-            Database.OpenCurrentLibrarySourceFolder();
+            DB.OpenCurrentLibrarySourceFolder();
         }
 
         private void checkBoxRandomize_CheckedChanged(object sender, EventArgs e)
@@ -251,7 +258,32 @@ namespace Calypso
 
         private void toolStripMenuItemAddNewLibrary_Click(object sender, EventArgs e)
         {
-            Database.AddNewLibrary();
+            DB.AddNewLibrary();
+        }
+
+        private void newGalleryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DB.AddNewLibrary();
+        }
+
+        private void removeTagToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TreesPanel.RenameTag(sender);
+        }
+
+        private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TreesPanel.DeleteTag(sender);
+        }
+
+        private void addChildTagToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TreesPanel.AddChildNode(sender);
+        }
+
+        private void addNewTagToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TreesPanel.PromptAddTag();
         }
     }
 }

@@ -4,17 +4,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows.Forms.Design;
 
 namespace Calypso
 {
-    internal static partial class Database
+    internal static partial class DB
     {
         public static List<Library> Libraries = new();
         public static Library? ActiveLibrary;
@@ -27,7 +20,7 @@ namespace Calypso
         // specific to active library? keep?
         public static List<ImageData> loadedImageDataList = new();
         public static List<ImageData> dbUntaggedImageData = new();
-        public static Dictionary<string, int> tagDict = new();
+        public static Dictionary<string, int> TagDict = new();
 
         // events
         public static event Action<Library> OnNewLibraryLoaded;
@@ -44,7 +37,7 @@ namespace Calypso
         }
         public static bool ReadDBJson()
         {
-            if (Util.TryDeserializeFromFile<List<Library>>(jsonLibraryList, out Libraries))
+            if (Util.TryLoad<List<Library>>(jsonLibraryList, out Libraries))
             {
                 if (ActiveLibrary == null)
                 {
@@ -71,7 +64,7 @@ namespace Calypso
                 };
 
                 Libraries.Add(ActiveLibrary); // assume Libraries is null
-                Util.SerializeToFile<List<Library>>(Libraries, jsonLibraryList);
+                Util.Save<List<Library>>(Libraries, jsonLibraryList);
 
                 return true;
             }
@@ -88,7 +81,7 @@ namespace Calypso
 
             if (File.Exists(jsonSession))
             {
-                if (Util.TryDeserializeFromFile<Session>(jsonSession, out sessionData))
+                if (Util.TryLoad<Session>(jsonSession, out sessionData))
                 {
                     return true;
                 }
@@ -98,7 +91,7 @@ namespace Calypso
         }
         public static void SaveSession(Session session)
         {
-            Util.SerializeToFile<Session>(session, jsonSession);
+            Util.Save<Session>(session, jsonSession);
         }
 
         private static bool PromptUserForLibrary(string message, out string libraryPath)
@@ -130,8 +123,10 @@ namespace Calypso
         {
             ActiveLibrary = lib;
 
-            string thumbPath = Path.Combine(lib.Dirpath, "thumbnails");
-            jsonActiveLibraryDB = Path.Combine(lib.Dirpath, "database.json");
+            if (!Directory.Exists(lib.Dirpath)) return;
+
+            string thumbPath = Path.Combine(lib.Dirpath, "database");
+            jsonActiveLibraryDB = Path.Combine(thumbPath, "database.json");
 
             List<string> unregisteredImages = new();
             string[] allImageFiles = Util.GetAllImageFilepaths(lib.Dirpath);
@@ -139,9 +134,9 @@ namespace Calypso
 
             if (!Directory.Exists(thumbPath)) Directory.CreateDirectory(thumbPath);
 
-            if (File.Exists(jsonActiveLibraryDB) && Util.TryDeserializeFromFile<List<ImageData>>(jsonActiveLibraryDB, out loadedImageDataList))
+            if (File.Exists(jsonActiveLibraryDB) && Util.TryLoad<List<ImageData>>(jsonActiveLibraryDB, out loadedImageDataList))
             {
-                Dictionary<string, ImageData> fileNameDict = Database.GenerateFilenameDict(loadedImageDataList);
+                Dictionary<string, ImageData> fileNameDict = DB.GenerateFilenameDict(loadedImageDataList);
 
                 foreach (string filepath in allImageFiles)
                 {
@@ -152,7 +147,7 @@ namespace Calypso
                 }
             }
             else if (!File.Exists(jsonActiveLibraryDB) || 
-                Util.TryDeserializeFromFile<List<ImageData>>(jsonActiveLibraryDB, out loadedImageDataList) == false)
+                Util.TryLoad<List<ImageData>>(jsonActiveLibraryDB, out loadedImageDataList) == false)
             {
                 foreach (string file in allImageFiles)
                 {
@@ -174,7 +169,7 @@ namespace Calypso
         private static string CreateThumbnail(string filepath)
         {
             string originalFilename = Path.GetFileName(filepath);
-            string thumbDir = Path.Combine(ActiveLibrary.Dirpath, "thumbnails");
+            string thumbDir = Path.Combine(ActiveLibrary.Dirpath, "database");
             string thumbSavePath = Path.Combine(thumbDir, "thumb_" + originalFilename);
 
             if (File.Exists(thumbSavePath))
@@ -203,7 +198,7 @@ namespace Calypso
                 };
 
                 Libraries.Add(newLib);
-                Util.SerializeToFile<List<Library>>(Libraries, jsonLibraryList);
+                Util.Save<List<Library>>(Libraries, jsonLibraryList);
 
                 LoadLibrary(newLib);
             }
@@ -212,8 +207,8 @@ namespace Calypso
         public static void GenDictsAndSaveLibrary()
         {
             BuildTagDict();
-            Database.GenerateTagDict(loadedImageDataList);
-            Util.SerializeToFile<List<ImageData>>(loadedImageDataList, jsonActiveLibraryDB);
+            DB.GenerateTagDict(loadedImageDataList);
+            Util.Save<List<ImageData>>(loadedImageDataList, jsonActiveLibraryDB);
         }
 
         public static List<ImageData> AddFilesToLibrary(string[] filepaths)
@@ -267,9 +262,9 @@ namespace Calypso
         }
         public static void RemoveTag(string tag)
         {
-            if (!Database.tagIndex.ContainsKey(tag)) return;
+            if (!DB.tagIndex.ContainsKey(tag)) return;
 
-            foreach (ImageData imgData in Database.tagIndex[tag])
+            foreach (ImageData imgData in DB.tagIndex[tag])
             {
                 imgData.Tags.Remove(tag);
             }
@@ -278,7 +273,7 @@ namespace Calypso
         private static void BuildTagDict()
         {
             dbUntaggedImageData.Clear();
-            tagDict.Clear();
+            TagDict.Clear();
 
             int totalEntriesCount = loadedImageDataList.Count;
 
@@ -292,18 +287,18 @@ namespace Calypso
 
                 foreach (string tag in entry.Tags)
                 {
-                    if (tagDict.ContainsKey(tag))
-                        tagDict[tag]++;
+                    if (TagDict.ContainsKey(tag))
+                        TagDict[tag]++;
                     else
-                        tagDict[tag] = 1;
+                        TagDict[tag] = 1;
                 }
             }
 
             //alphabetize
-            tagDict = tagDict.OrderBy(kvp => kvp.Key)
+            TagDict = TagDict.OrderBy(kvp => kvp.Key)
                          .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-            TreesPanel.Populate(tagDict, dbUntaggedImageData.Count, totalEntriesCount);
+            //TreesPanel.Populate(TagDict, dbUntaggedImageData.Count, totalEntriesCount);
         }
 
         public static void CopyImageFilesToLibraryDir(string[] filepaths)

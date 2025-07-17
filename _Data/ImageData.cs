@@ -22,13 +22,13 @@ namespace Calypso
             Tags = new List<string>();
         }
 
-        public void SetTags(List<string> tags)
+        public void SetTagList(List<string> tags)
         {
             Tags = tags;
             AlphabetizeTags();
         }
 
-        public void SetTagsOnlyAdd(List<string> tags)
+        public void AddTags(List<string> tags)
         {
             foreach (var t in tags)
             {
@@ -38,6 +38,14 @@ namespace Calypso
                 }
             }
             AlphabetizeTags();
+        }
+
+        public void AddTag(string tag)
+        {
+            if (!Tags.Contains(tag))
+            {
+                Tags.Add(tag);
+            }
         }
 
         public void RemoveTags(List<string> tags)
@@ -50,7 +58,7 @@ namespace Calypso
                 }
             }
         }
-        public void RemoveTags(string tag)
+        public void RemoveTag(string tag)
         {
             if (Tags.Contains(tag))
             {
@@ -58,7 +66,7 @@ namespace Calypso
             }
         }
 
-        private void AlphabetizeTags()
+        public void AlphabetizeTags()
         {
             Tags = Tags.OrderBy(t => t).ToList();
         }
