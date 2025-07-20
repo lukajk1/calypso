@@ -1,4 +1,6 @@
 ﻿
+using System.Diagnostics;
+
 namespace Calypso
 {
     public class Library
@@ -6,26 +8,36 @@ namespace Calypso
         public string Name { get; set; }
         public string Dirpath { get; set; }
         public List<TagNode> TagTree { get; set; } = new();
+        public List<ImageData> ImageDataList { get; set; } = new();
 
-        public bool AddTag(string tag)
+        public Library(string name, string dirpath) 
         {
-            foreach (TagNode node in TagTree)
-            {
-                if (node.Tag == tag) return false;
-            }
-
-            TagTree.Add(new TagNode() { Tag = tag });
-            return true;
+            Name = name;
+            Dirpath = dirpath;
         }
 
-        public bool AddChildTag(TagNode parent, string tag)
+        public bool AddTag(TagNode newTag)
         {
-            foreach (TagNode child in parent.Children)
+            string name = newTag.Name;
+            if (name == "all" || name == "untagged")
             {
-                if (child.Tag == tag) return false;
+                Util.ShowErrorDialog($"Invalid name for a tag!");
+                return false;
             }
 
-            parent.Children.Add(new TagNode() { Tag = tag });
+            foreach (TagNode node in TagTree)
+            {
+                if (node.Name == newTag.Name)
+                {
+                    Util.ShowErrorDialog($"The tag {newTag.Name} already exists!");
+                    return false;
+                }
+            }
+
+            TagTree.Add(newTag);
+            Debug.WriteLine("tagtree length: " + TagTree.Count);
+
+            TreesPanel.Populate(DB.GenCurrentTagTree());
             return true;
         }
     }

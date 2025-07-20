@@ -149,7 +149,7 @@ namespace Calypso
                 tile._Container.Height = thumbSize + labelHeight + 10;
             }
 
-            mainW.toolStripLabelThumbnailSize.Text = $"Thumbnail Height: {thumbSize}px";
+            //mainW.toolStripLabelThumbnailSize.Text = $"Thumbnail Height: {thumbSize}px";
             flowLayoutGallery.PerformLayout();
             CountPictureBoxesPerRow();
         }
@@ -287,11 +287,11 @@ namespace Calypso
 
             foreach (TileTag tTag in selectedTiles)
             {
-                if (File.Exists(tTag._ImageData.FullResPath))
+                if (File.Exists(tTag._ImageData.Filepath))
                 {
                     Process.Start(new ProcessStartInfo
                     {
-                        FileName = tTag._ImageData.FullResPath,
+                        FileName = tTag._ImageData.Filepath,
                         UseShellExecute = true
                     });
                 }

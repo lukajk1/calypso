@@ -58,10 +58,10 @@ namespace Calypso
                     (Math.Abs(e.X - dragStartPoint.X) > DragThreshold ||
                      Math.Abs(e.Y - dragStartPoint.Y) > DragThreshold))
                 {
-                    if (pb.Tag is TileTag tTag && File.Exists(tTag._ImageData.FullResPath))
+                    if (pb.Tag is TileTag tTag && File.Exists(tTag._ImageData.Filepath))
                     {
                         pb.DoDragDrop(
-                            new DataObject(DataFormats.FileDrop, new string[] { tTag._ImageData.FullResPath }),
+                            new DataObject(DataFormats.FileDrop, new string[] { tTag._ImageData.Filepath }),
                             DragDropEffects.Copy);
                         dragStartPoint = Point.Empty;
                     }
@@ -71,18 +71,18 @@ namespace Calypso
 
         public static void PictureBox_DoubleClick(object? sender, EventArgs e)
         {
-            if (sender is PictureBox pb && pb.Tag is TileTag tTag && File.Exists(tTag._ImageData.FullResPath))
+            if (sender is PictureBox pb && pb.Tag is TileTag tTag && File.Exists(tTag._ImageData.Filepath))
             {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = tTag._ImageData.FullResPath,
+                    FileName = tTag._ImageData.Filepath,
                     UseShellExecute = true
                 });
             }
         }
         public static void PictureBox_MouseClick(object sender, MouseEventArgs e)
         {
-            Mediator.FocusedPane = Pane.Gallery;
+            MainWindow.FocusedPane = Pane.Gallery;
 
             if (sender is not PictureBox pb || pb.Tag is not TileTag tTag)
                 return;
@@ -117,7 +117,7 @@ namespace Calypso
 
             //if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right) {}
 
-            if (e.Button == MouseButtons.Right && File.Exists(tTag._ImageData.FullResPath))
+            if (e.Button == MouseButtons.Right && File.Exists(tTag._ImageData.Filepath))
             {
                 TagEditManager.Open(selectedTiles);
             }

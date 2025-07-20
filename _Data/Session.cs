@@ -14,5 +14,16 @@ namespace Calypso
         public FormWindowState WindowState { get; set; }
         public Library LastActiveLibrary { get; set; }
         public float ZoomFactor { get; set; }
+
+        public Session(int windowWidth, int windowHeight, bool randomiseChecked,
+                    FormWindowState windowState, Library lastActiveLibrary, float zoomFactor)
+        {
+            WindowWidth = windowWidth;
+            WindowHeight = windowHeight;
+            RandomiseChecked = randomiseChecked;
+            WindowState = windowState;
+            LastActiveLibrary = lastActiveLibrary;
+            ZoomFactor = zoomFactor;
+        }
     }
 }

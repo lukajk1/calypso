@@ -6,10 +6,15 @@ using System.Threading.Tasks;
 
 namespace Calypso
 {
-    public class TagNode
+    public struct TagNode
     {
-        public string Tag { get; set; }
-        public int ContentCount { get; set; } = 0;
-        public List<TagNode> Children { get; set; } = new();
+        public string Parent { get; set; }
+        public string Name { get; set; }
+
+        public TagNode(string tag, string parent = "") // parent empty by default
+        {
+            Name = tag;
+            Parent = parent;
+        }    
     }
 }

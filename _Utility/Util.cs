@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -48,7 +49,8 @@ namespace Calypso
 
         public static void Save<T>(T obj, string filePath)
         {
-            string json = JsonSerializer.Serialize(obj);
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            string json = JsonSerializer.Serialize(obj, options);
             File.WriteAllText(filePath, json);
         }
 
@@ -68,7 +70,20 @@ namespace Calypso
         }
 
 
-        public static Image CreateThumbnail(string imagePath, int thumbnailHeight)
+        public static string CreateThumbnail(Library lib, string originalImagePath)
+        {
+            string originalFilename = Path.GetFileName(originalImagePath);
+            string thumbDir = Path.Combine(lib.Dirpath, "data");
+            string thumbSavePath = Path.Combine(thumbDir, "thumb_" + originalFilename);
+
+            using Image thumb = CreateThumbnail(originalImagePath, GlobalValues.ThumbnailSize);
+            ImageFormat format = GetImageFormatFromExtension(thumbSavePath);
+            thumb.Save(thumbSavePath, format);
+
+            return thumbSavePath;
+        }
+
+        private static Image CreateThumbnail(string imagePath, int thumbnailHeight)
         {
             using Image fullImage = Image.FromFile(imagePath);
             int originalWidth = fullImage.Width;
@@ -79,6 +94,8 @@ namespace Calypso
 
             return fullImage.GetThumbnailImage(newWidth, newHeight, () => false, IntPtr.Zero);
         }
+
+
 
         public static ImageFormat GetImageFormatFromExtension(string filePath)
         {
@@ -93,6 +110,19 @@ namespace Calypso
                 ".tiff" => ImageFormat.Tiff,
                 _ => ImageFormat.Png // default fallback
             };
+        }
+
+        public static void CopyImageFilesToLibraryDir(string[] filepaths)
+        {
+            foreach (string filepath in filepaths)
+            {
+                if (File.Exists(filepath))
+                {
+                    string filename = Path.GetFileName(filepath);
+                    string destFilepath = Path.Combine(DB.appdata.ActiveLibrary.Dirpath, filename);
+                    File.Copy(filepath, destFilepath, overwrite: false);
+                }
+            }
         }
     }
 }

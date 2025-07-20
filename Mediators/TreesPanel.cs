@@ -17,7 +17,7 @@ namespace Calypso
         static int previousSplitterDistance;
         static bool isCollapsed;
         static TreeNode selectedNode;
-
+        static bool initialized;
         public static void Init(MainWindow mainW)
         {
             TreesPanel.mainW = mainW;
@@ -26,10 +26,14 @@ namespace Calypso
 
             TreeNode nodeRand = searchTree.Nodes.Insert(0, "Random Tag");
             nodeRand.Tag = "rtag";
+
+            initialized = true;
         }
 
-        public static void Populate(List<TagNode> tagNodes, int untaggedEntriesCount, int totalEntriesCount)
+        public static void Populate(TagTreeData tagTreeData)
         {
+            if (!initialized) return;
+
             tagTree.Nodes.Clear();
 
             tagTree.NodeMouseClick -= OnTagNodeClick; // Remove if already attached
@@ -37,17 +41,17 @@ namespace Calypso
             searchTree.NodeMouseClick -= OnTagNodeClick;
             searchTree.NodeMouseClick += OnTagNodeClick;
 
-            GenerateTagTree(tagNodes);
+            GenerateTagTree(tagTreeData.TagDict);
 
             TreeNode separator = new TreeNode("──────────");
             separator.ForeColor = Color.Gray;
             separator.NodeFont = new Font("Consolas", 8, FontStyle.Regular);
             tagTree.Nodes.Insert(0, separator);
 
-            TreeNode nodeNone = tagTree.Nodes.Insert(0, $"Untagged ({untaggedEntriesCount.ToString()})");
+            TreeNode nodeNone = tagTree.Nodes.Insert(0, $"Untagged ({tagTreeData.UntaggedCount.ToString()})");
             nodeNone.Tag = "untagged";
 
-            TreeNode nodeAll = tagTree.Nodes.Insert(0, $"All Images ({totalEntriesCount.ToString()})");
+            TreeNode nodeAll = tagTree.Nodes.Insert(0, $"All Images ({tagTreeData.TotalEntries.ToString()})");
             nodeAll.Tag = "all";
 
             tagTree.ExpandAll(); 
@@ -58,14 +62,14 @@ namespace Calypso
                 e.Cancel = true; // Prevent collapsing
             };
         }
-        private static void GenerateTagTree(List<TagNode> tagNodes)
+        public static void GenerateTagTree(Dictionary<TagNode, List<ImageData>> tagDictionary)
         {
             tagTree.BeginUpdate();
             tagTree.Nodes.Clear();
 
-            foreach (TagNode node in tagNodes)
+            foreach (var kvp in tagDictionary)
             {
-                TreeNode treeNode = CreateTreeNodeRecursive(node);
+                TreeNode treeNode = CreateTreeNodeRecursive(kvp.Key, tagDictionary);
                 tagTree.Nodes.Add(treeNode);
             }
 
@@ -73,18 +77,20 @@ namespace Calypso
             tagTree.EndUpdate();
         }
 
-        private static TreeNode CreateTreeNodeRecursive(TagNode node)
+        private static TreeNode CreateTreeNodeRecursive(TagNode node, Dictionary<TagNode, List<ImageData>> tagDictionary)
         {
-            string displayText = $"#{node.Tag} ({node.ContentCount})";
+            int contentCount = tagDictionary.TryGetValue(node, out var images) ? images.Count : 0;
+            string displayText = $"#{node.Name} ({contentCount})";
+
             TreeNode treeNode = new TreeNode(displayText)
             {
-                Tag = node.Tag
+                Tag = node.Name
             };
 
-            foreach (var child in node.Children)
-            {
-                treeNode.Nodes.Add(CreateTreeNodeRecursive(child));
-            }
+            //foreach (var child in node.Children)
+            //{
+            //    treeNode.Nodes.Add(CreateTreeNodeRecursive(child, tagDictionary));
+            //}
 
             return treeNode;
         }

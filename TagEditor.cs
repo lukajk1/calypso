@@ -57,48 +57,48 @@ namespace Calypso
 
         public void Populate(List<TileTag> selection)
         {
-            this.selection = selection;
-            checkedListBoxTags.Items.Clear();
+            //this.selection = selection;
+            //checkedListBoxTags.Items.Clear();
 
-            this.TagCountInSelection.Clear();
+            //this.TagCountInSelection.Clear();
 
-            foreach (TileTag tTag in selection)
-            {
-                foreach (string tag in tTag._ImageData.Tags)
-                {
-                    if (TagCountInSelection.ContainsKey(tag))
-                    {
-                        TagCountInSelection[tag]++;
-                    }
-                    else
-                    {
-                        TagCountInSelection.Add(tag, 1);
-                    }
-                }
-            }
+            //foreach (TileTag tTag in selection)
+            //{
+            //    foreach (string tag in tTag._ImageData.Tags)
+            //    {
+            //        if (TagCountInSelection.ContainsKey(tag))
+            //        {
+            //            TagCountInSelection[tag]++;
+            //        }
+            //        else
+            //        {
+            //            TagCountInSelection.Add(tag, 1);
+            //        }
+            //    }
+            //}
 
-            tagsUnchecked.Clear();
-            multipleSelectionTagsChecked.Clear();
+            //tagsUnchecked.Clear();
+            //multipleSelectionTagsChecked.Clear();
 
-            foreach (var kvp in TagCountInSelection)
-            {
-                bool isChecked = (kvp.Value == selection.Count);
+            //foreach (var kvp in TagCountInSelection)
+            //{
+            //    bool isChecked = (kvp.Value == selection.Count);
 
-                if (isChecked)
-                {
-                    multipleSelectionTagsChecked.Add(kvp.Key);
-                }
+            //    if (isChecked)
+            //    {
+            //        multipleSelectionTagsChecked.Add(kvp.Key);
+            //    }
 
-                checkedListBoxTags.Items.Add($"# {kvp.Key} ({kvp.Value})", isChecked);
+            //    checkedListBoxTags.Items.Add($"# {kvp.Key} ({kvp.Value})", isChecked);
 
-            }
+            //}
 
-            // add tags not in selection
-            foreach (var kvp in DB.TagDict)
-            {
-                if (!TagCountInSelection.ContainsKey(kvp.Key))
-                    checkedListBoxTags.Items.Add("#" + kvp.Key, false);
-            }
+            //// add tags not in selection
+            //foreach (var kvp in DB.TagDict)
+            //{
+            //    if (!TagCountInSelection.ContainsKey(kvp.Key))
+            //        checkedListBoxTags.Items.Add("#" + kvp.Key, false);
+            //}
         }
 
         // handle tag deletion
@@ -113,32 +113,32 @@ namespace Calypso
                 checkedListBoxTags.Items.Remove(checkedListBoxTags.SelectedItem);
 
                 DB.RemoveTag(tag);
-                DB.GenDictsAndSaveLibrary();
+                DB.GenDictAndSaveLibrary();
                 e.Handled = true;
             }
         }
 
         private void AddTagEvent(object sender, EventArgs e)
         {
-            string tag = newTagTextBox.Text;
-            newTagTextBox.Clear();
+            //string tag = newTagTextBox.Text;
+            //newTagTextBox.Clear();
 
-            tag = tag.Trim().ToLower().Replace(" ", "-");
+            //tag = tag.Trim().ToLower().Replace(" ", "-");
 
-            if (tag != string.Empty)
-            {
-                if (DB.TagDict.ContainsKey(tag))
-                {
-                    mainW.Activate();
-                    mainW.Focus();
+            //if (tag != string.Empty)
+            //{
+            //    if (DB.TagDict.ContainsKey(tag))
+            //    {
+            //        mainW.Activate();
+            //        mainW.Focus();
 
-                    Util.ShowErrorDialog("Tag already exists!");
-                }
-                else
-                {
-                    checkedListBoxTags.Items.Add("#" + tag, true);
-                }
-            }
+            //        Util.ShowErrorDialog("Tag already exists!");
+            //    }
+            //    else
+            //    {
+            //        checkedListBoxTags.Items.Add("#" + tag, true);
+            //    }
+            //}
 
         }
 
@@ -151,12 +151,12 @@ namespace Calypso
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
-            foreach (TileTag tTag in selection)
-            {
-                tTag._ImageData.SetTagList(checkedTags);
-            }
+            //foreach (TileTag tTag in selection)
+            //{
+            //    tTag._ImageData.AddTags(checkedTags);
+            //}
 
-            DB.GenDictsAndSaveLibrary();
+            DB.GenDictAndSaveLibrary();
 
             this.CloseForm();
         }

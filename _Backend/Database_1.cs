@@ -10,8 +10,11 @@ namespace Calypso
     internal static partial class DB
     {
         public static Dictionary<string, List<ImageData>> tagIndex = new();
+        #region searching
         public static void Search(string searchTextRaw, bool randomize, int upperLimit)
         {
+            if (ActiveTagTree == null) return;
+
             List<ImageData> results = new();
             string[] tagsInclude = { };
             string[] tagsExclude = { };
@@ -19,34 +22,31 @@ namespace Calypso
             string stripped = new string(searchTextRaw.Where(c => !char.IsWhiteSpace(c)).ToArray());
             stripped = stripped.ToLower();
 
-            if (stripped == "all")
-            {
-                results = DB.loadedImageDataList;
-            }
-            else if (stripped == "untagged")
-            {
-                results = DB.dbUntaggedImageData;
-            }
-            else if (stripped == "randtag" || stripped == "rtag" || stripped == "randomtag")
+            if (stripped == "randtag" || stripped == "rtag" || stripped == "randomtag")
             {
                 var random = new Random();
 
-                if (!(DB.TagDict.Count > 0)) 
+                if (!(ActiveTagTree.TagDict.Count < 3)) // all tagdicts have 2 elements by default, all and untagged
                 {
-                    Gallery.Populate(results); // return empty
+                    return;
                 }
                 else
                 {
-                    string randTag = DB.TagDict.ElementAt(random.Next(DB.TagDict.Count)).Key;
-                    Searchbar.Search(randTag); 
+                    // implement eventually maybe
                     return;
                 }
 
             }
             else
             {
-                ParseQuery(stripped, out tagsInclude, out tagsExclude);
-                results = FilterByTags(tagsInclude, tagsExclude);
+                foreach (var kvp in ActiveTagTree.TagDict)
+                {
+                    if (kvp.Key.Name == stripped)
+                    {
+                        results = kvp.Value;
+                        break;
+                    }
+                }
             }
 
             if (randomize)
@@ -88,33 +88,36 @@ namespace Calypso
                 .Distinct()
                 .ToList();
 
-            if (tagExclude.Length > 0)
-            {
-                var excludeSet = new HashSet<string>(tagExclude);
-                result = result
-                    .Where(img => img.Tags.All(t => !excludeSet.Contains(t)))
-                    .ToList();
-            }
+            //if (tagExclude.Length > 0)
+            //{
+            //    var excludeSet = new HashSet<string>(tagExclude);
+            //    result = result
+            //        .Where(img => img.Tags.All(t => !excludeSet.Contains(t)))
+            //        .ToList();
+            //}
 
             return result;
         }
         public static void GenerateTagDict(List<ImageData> allImages)
         {
-            tagIndex.Clear();
-            foreach (var image in allImages)
-            {
-                foreach (var tag in image.Tags)
-                {
-                    if (!tagIndex.TryGetValue(tag, out var list))
-                    {
-                        list = new List<ImageData>();
-                        tagIndex[tag] = list;
-                    }
-                    list.Add(image);
-                }
-            }
+            //tagIndex.Clear();
+            //foreach (var image in allImages)
+            //{
+            //    foreach (var tag in image.Tags)
+            //    {
+            //        if (!tagIndex.TryGetValue(tag, out var list))
+            //        {
+            //            list = new List<ImageData>();
+            //            tagIndex[tag] = list;
+            //        }
+            //        list.Add(image);
+            //    }
+            //}
 
         }
+        #endregion
+
+
         public static Dictionary<string, ImageData> GenerateFilenameDict(List<ImageData> allImages)
         {
             var filenameIndex = new Dictionary<string, ImageData>(StringComparer.OrdinalIgnoreCase);
@@ -128,25 +131,119 @@ namespace Calypso
             return filenameIndex;
         }
 
+        public static void OnClose(Session session)
+        {
+            appdata.LastSession = session;
+            Util.Save<Appdata>(appdata, appdataFilePath);
+        }
+
+        #region miscellaneous helpers
         public static void DeleteImageData(List<ImageData> imgDataList)
         {
             foreach (ImageData imgData in imgDataList)
             {
-                loadedImageDataList.Remove(imgData);
+                appdata.ActiveLibrary.ImageDataList.Remove(imgData);
 
                 if (File.Exists(imgData.ThumbnailPath))
                 {
                     File.Delete(imgData.ThumbnailPath);
                 }
 
-                if (File.Exists(imgData.FullResPath))
+                if (File.Exists(imgData.Filepath))
                 {
-                    File.Delete(imgData.FullResPath);
+                    File.Delete(imgData.Filepath);
                 }
             }
 
-            GenDictsAndSaveLibrary();
+            GenDictAndSaveLibrary();
         }
 
+        public static void RemoveLibrary(Library library) { }
+        public static void AddNewLibrary()
+        {
+            string libPath;
+            if (PromptUserForLibrary("Add new library?", out libPath))
+            {
+                // if there is a library already registered with that directory, simply open that existing library
+                foreach (Library lib in appdata.Libraries)
+                {
+                    if (lib.Dirpath == libPath)
+                    {
+                        LoadLibrary(lib);
+                        return;
+                    }
+                }
+
+                Library newLib = new Library(
+                    name: Path.GetFileName(libPath.TrimEnd(Path.DirectorySeparatorChar)),
+                    dirpath: libPath
+                );
+
+                appdata.Libraries.Add(newLib);
+                LoadLibrary(newLib);
+            }
+        }
+        public static void OpenCurrentLibrarySourceFolder()
+        {
+            if (appdata.ActiveLibrary == null) return;
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = appdata.ActiveLibrary.Dirpath,
+                UseShellExecute = true
+            });
+        }
+        public static void RemoveTag(string tag)
+        {
+            //if (!DB.tagIndex.ContainsKey(tag)) return;
+
+            //foreach (ImageData imgData in DB.tagIndex[tag])
+            //{
+            //    imgData.Tags.Remove(tag);
+            //}
+            //GenTagTree();
+        }
+
+        public static List<ImageData> AddFilesToLibrary(string[] filepaths)
+        {
+            string targetDir = appdata.ActiveLibrary.Dirpath;
+            string thumbSavePath = string.Empty;
+            string destPath = string.Empty;
+            List<ImageData> newImages = new();
+
+            foreach (string fp in filepaths)
+            {
+                // copy to main folder
+                string filename = string.Empty;
+                string ext = Path.GetExtension(fp).ToLower();
+                if (ext is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".gif")
+                {
+                    filename = Path.GetFileName(fp);
+                    destPath = Path.Combine(targetDir, filename);
+
+                    if (!File.Exists(destPath))
+                    {
+                        File.Copy(fp, destPath, overwrite: false);
+                        thumbSavePath = Util.CreateThumbnail(appdata.ActiveLibrary, destPath);
+                    }
+                    else
+                    {
+                        Util.ShowErrorDialog($"A file named {filename} already exists in {targetDir}!");
+                        return null;
+                    }
+                }
+
+                if (thumbSavePath != string.Empty && filename != string.Empty)
+                {
+                    ImageData newImageData = new(destPath, thumbSavePath);
+                    newImages.Add(newImageData);
+                    appdata.ActiveLibrary.ImageDataList.Add(newImageData);
+                }
+            }
+
+            GenDictAndSaveLibrary();
+            return newImages;
+        }
+        #endregion
     }
 }

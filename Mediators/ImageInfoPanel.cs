@@ -70,13 +70,13 @@ namespace Calypso
         }
         public static void Display(ImageData imgData)
         {
-            if (!Path.Exists(imgData.FullResPath))
+            if (!Path.Exists(imgData.Filepath))
             {
                 Util.ShowErrorDialog("Error loading image.");
                 return;
             }
 
-            using (Image img = Image.FromFile(imgData.FullResPath))
+            using (Image img = Image.FromFile(imgData.Filepath))
             {
                 Image clone = new Bitmap(img);
                 senderImageData = clone; // memory leak proofing
@@ -96,7 +96,7 @@ namespace Calypso
             labelDimensions.Text = $"{img.Width} x {img.Height}";
             labelFilename.Text = imgData.Filename;
 
-            long byteSize = new FileInfo(imgData.FullResPath).Length;
+            long byteSize = new FileInfo(imgData.Filepath).Length;
             string sizeStr = byteSize >= 1024 * 1024
                 ? $"{byteSize / (1024.0 * 1024.0):F1} MB"
                 : $"{byteSize / 1024.0:F1} KB";

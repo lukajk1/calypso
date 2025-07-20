@@ -7,91 +7,82 @@ using System.Drawing.Imaging;
 
 namespace Calypso
 {
+    public class Appdata
+    {
+        public List<Library> Libraries { get; set; }
+        public Library ActiveLibrary { get; set; }
+        public Session LastSession { get; set; }
+
+        public Appdata(List<Library> libraries, Library activeLibrary, Session lastSession) 
+        { 
+            Libraries = libraries;
+            ActiveLibrary = activeLibrary;
+            LastSession = lastSession;
+        }
+    }
+    
+    public class TagTreeData
+    {
+        public Dictionary<TagNode, List<ImageData>> TagDict = new();
+        public int UntaggedCount { get; set; }
+        public int TotalEntries { get; set; }
+
+        public TagTreeData(Dictionary<TagNode, List<ImageData>> tagDict, int totalEntries, int untaggedCount)
+        {
+            TagDict = tagDict;
+            TotalEntries = totalEntries;
+            UntaggedCount = untaggedCount;
+        }
+    }
+
     internal static partial class DB
     {
-        public static List<Library> Libraries = new();
-        public static Library? ActiveLibrary;
-
-        private static string jsonLibraryList; // keep this, no need to move this field out of here.
-        private static string appdataDirPath;
-        private static string jsonActiveLibraryDB;
-        private static string jsonSession;
-
-        // specific to active library? keep?
-        public static List<ImageData> loadedImageDataList = new();
-        public static List<ImageData> dbUntaggedImageData = new();
-        public static Dictionary<string, int> TagDict = new();
+        public static Appdata appdata;
+        private static string appdataFilePath = string.Empty;
+        public static TagTreeData ActiveTagTree;
 
         // events
-        public static event Action<Library> OnNewLibraryLoaded;
-        public static void Init(out bool jsonExists)
-        {
-            appdataDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CalypsoManager");
-            jsonLibraryList = Path.Combine(appdataDirPath, "libraries.json");
-            jsonSession = Path.Combine(appdataDirPath, "session.json");
+        public static event Action<Library>? OnNewLibraryLoaded;
 
-            bool appdataExists = Directory.Exists(appdataDirPath);
-            if (!appdataExists) Directory.CreateDirectory(appdataDirPath);
-
-            jsonExists = File.Exists(jsonLibraryList);
-        }
-        public static bool ReadDBJson()
+        public static bool Init(MainWindow mainW)
         {
-            if (Util.TryLoad<List<Library>>(jsonLibraryList, out Libraries))
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string myAppFolder = Path.Combine(appDataPath, "Calypso");
+            Directory.CreateDirectory(myAppFolder);
+            appdataFilePath = Path.Combine(myAppFolder, "database.save");
+
+            // exclamation is null-forgiving operator
+            if (Util.TryLoad<Appdata>(appdataFilePath, out appdata) || (appdata = NewAppdata()!) != null)
             {
-                if (ActiveLibrary == null)
-                {
-                    ActiveLibrary = Libraries[0];
-                }
+                mainW.LoadSession(appdata.LastSession);
+                LoadLibrary(appdata.LastSession.LastActiveLibrary);
                 return true;
-            }
-            else
-            {
-                return false;
-            }
-
-        }
-        public static bool CreateDBJson()
-        {
-            string libraryPath;
-
-            if (PromptUserForLibrary("No library reference was found. Specify a directory now?", out libraryPath))
-            {
-                ActiveLibrary = new Library()
-                {
-                    Name = Path.GetFileName(libraryPath.TrimEnd(Path.DirectorySeparatorChar)),
-                    Dirpath = libraryPath
-                };
-
-                Libraries.Add(ActiveLibrary); // assume Libraries is null
-                Util.Save<List<Library>>(Libraries, jsonLibraryList);
-
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-
-        }
-
-        public static bool RetrieveSession(out Session sessionData)
-        {
-            sessionData = default;
-
-            if (File.Exists(jsonSession))
-            {
-                if (Util.TryLoad<Session>(jsonSession, out sessionData))
-                {
-                    return true;
-                }
             }
 
             return false;
         }
-        public static void SaveSession(Session session)
+        private static Appdata? NewAppdata()
         {
-            Util.Save<Session>(session, jsonSession);
+            string libraryPath;
+
+            if (PromptUserForLibrary("No existing library was found. Specify a folder now?", out libraryPath))
+            {
+                Library newLib = new(
+                    name: Path.GetFileName(libraryPath.TrimEnd(Path.DirectorySeparatorChar)),
+                    dirpath: libraryPath
+                );
+
+                var newAppdata = new Appdata(
+                    libraries: new List<Library>() { newLib },
+                    activeLibrary: newLib,
+                    lastSession: MainWindow.i.CaptureCurrentSession(newLib)
+                );
+
+                Util.Save<Appdata>(newAppdata, appdataFilePath);
+                return newAppdata;
+            }
+
+            return null; // No valid appdata could be created
         }
 
         private static bool PromptUserForLibrary(string message, out string libraryPath)
@@ -105,6 +96,7 @@ namespace Calypso
                     DialogResult resultPath = dialog.ShowDialog();
                     if (resultPath == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
                     {
+                        Debug.WriteLine(dialog.SelectedPath);
                         libraryPath = dialog.SelectedPath;
                         return true;
                     }
@@ -115,203 +107,89 @@ namespace Calypso
             return false;
         }
 
-        public static void LoadActiveLibrary()
-        {
-            LoadLibrary(ActiveLibrary);
-        }
         public static void LoadLibrary(Library lib)
         {
-            ActiveLibrary = lib;
+            Debug.WriteLine(lib.Dirpath);
+            appdata.ActiveLibrary = lib;
 
-            if (!Directory.Exists(lib.Dirpath)) return;
+            if (!Directory.Exists(lib.Dirpath))
+            {
+                Util.ShowInfoDialog($"The directory for library \"{lib.Name}\" at {lib.Dirpath} could not be found. This reference will now be removed. (If this library was manually moved you can re-add it via \"File > Add New Library\" at any time.");
+                return;
+            }
 
-            string thumbPath = Path.Combine(lib.Dirpath, "database");
-            jsonActiveLibraryDB = Path.Combine(thumbPath, "database.json");
-
-            List<string> unregisteredImages = new();
-            string[] allImageFiles = Util.GetAllImageFilepaths(lib.Dirpath);
-            loadedImageDataList.Clear();
-
+            string thumbPath = Path.Combine(lib.Dirpath, "data");
             if (!Directory.Exists(thumbPath)) Directory.CreateDirectory(thumbPath);
 
-            if (File.Exists(jsonActiveLibraryDB) && Util.TryLoad<List<ImageData>>(jsonActiveLibraryDB, out loadedImageDataList))
-            {
-                Dictionary<string, ImageData> fileNameDict = DB.GenerateFilenameDict(loadedImageDataList);
+            string[] allImageFiles = Util.GetAllImageFilepaths(lib.Dirpath);
+            List<string> unregisteredImages = allImageFiles.ToList();
 
-                foreach (string filepath in allImageFiles)
-                {
-                    if (!fileNameDict.ContainsKey(Path.GetFileName(filepath)))
-                    {
-                        unregisteredImages.Add(filepath); // add all filenames that aren't registered in the database to a list
-                    }
-                }
-            }
-            else if (!File.Exists(jsonActiveLibraryDB) || 
-                Util.TryLoad<List<ImageData>>(jsonActiveLibraryDB, out loadedImageDataList) == false)
+            // build the unregistered image list by removing the ones that have an imagedata object already
+            foreach (ImageData img in lib.ImageDataList)
             {
-                foreach (string file in allImageFiles)
+                if (allImageFiles.Contains(img.Filepath))
                 {
-                    unregisteredImages.Add(file);
+                    unregisteredImages.Remove(img.Filepath);
                 }
             }
 
-            foreach (string filepath in unregisteredImages)
-            { 
-                string thumbSavePath = CreateThumbnail(filepath); 
-                ImageData newImageData = new ImageData(filepath, thumbSavePath, Path.GetFileName(filepath));
-                loadedImageDataList.Add(newImageData);
+            // create an imagedata wrapper for each new file
+            foreach (string file in unregisteredImages)
+            {
+                ImageData newImage = new(file, Util.CreateThumbnail(lib, file));
+                lib.ImageDataList.Add(newImage);
             }
 
-            GenDictsAndSaveLibrary();
+            // if any other imagedata do not have a valid thumbnail, generate.
+            foreach (ImageData img in lib.ImageDataList)
+            {
+                if (!File.Exists(img.ThumbnailPath))
+                {
+                    Util.CreateThumbnail(lib, img.Filepath);
+                }
+            }
+
+            GenDictAndSaveLibrary();
             OnNewLibraryLoaded?.Invoke(lib);
         }
 
-        private static string CreateThumbnail(string filepath)
+        public static void GenDictAndSaveLibrary()
         {
-            string originalFilename = Path.GetFileName(filepath);
-            string thumbDir = Path.Combine(ActiveLibrary.Dirpath, "database");
-            string thumbSavePath = Path.Combine(thumbDir, "thumb_" + originalFilename);
-
-            if (File.Exists(thumbSavePath))
-            {
-                return thumbSavePath;
-            }
-            else
-            {
-                using Image thumb = Util.CreateThumbnail(filepath, GlobalValues.ThumbnailSize);
-                ImageFormat format = Util.GetImageFormatFromExtension(thumbSavePath);
-                thumb.Save(thumbSavePath, format);
-
-                return thumbSavePath;
-            }
+            ActiveTagTree = GenCurrentTagTree();
+            Util.Save<Appdata>(appdata, appdataFilePath);
         }
 
-        public static void AddNewLibrary()
+        public static TagTreeData GenCurrentTagTree()
         {
-            string libPath;
-            if (PromptUserForLibrary("Add new library?", out libPath))
+            Dictionary<TagNode, List<ImageData>> tagDict = new();
+            List<ImageData> untagged = new();
+            List<ImageData> imgList = appdata.ActiveLibrary.ImageDataList;
+
+            foreach (ImageData img in imgList)
             {
-                Library newLib = new Library()
+                if (img.Tags.Count == 0)
                 {
-                    Name = Path.GetFileName(libPath.TrimEnd(Path.DirectorySeparatorChar)),
-                    Dirpath = libPath
-                };
-
-                Libraries.Add(newLib);
-                Util.Save<List<Library>>(Libraries, jsonLibraryList);
-
-                LoadLibrary(newLib);
-            }
-        }
-
-        public static void GenDictsAndSaveLibrary()
-        {
-            BuildTagDict();
-            DB.GenerateTagDict(loadedImageDataList);
-            Util.Save<List<ImageData>>(loadedImageDataList, jsonActiveLibraryDB);
-        }
-
-        public static List<ImageData> AddFilesToLibrary(string[] filepaths)
-        {
-            string targetDir = ActiveLibrary.Dirpath;
-            string thumbSavePath = string.Empty;
-            string destPath = string.Empty;
-            List<ImageData> newImages = new();
-
-            foreach (string fp in filepaths)
-            {
-                // copy to main folder
-                string filename = string.Empty;
-                string ext = Path.GetExtension(fp).ToLower();
-                if (ext is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".gif")
-                {
-                    filename = Path.GetFileName(fp);
-                    destPath = Path.Combine(targetDir, filename);
-
-                    if (!File.Exists(destPath))
-                    {
-                        File.Copy(fp, destPath, overwrite: false);
-                        thumbSavePath = CreateThumbnail(destPath);
-                    }
-                    else
-                    {
-                        Util.ShowErrorDialog($"A file named {filename} already exists in {targetDir}!");
-                        return null;
-                    }
-                }
-
-                if (thumbSavePath != string.Empty && filename != string.Empty)
-                {
-                    ImageData newImageData = new ImageData(destPath, thumbSavePath, filename);
-                    newImages.Add(newImageData);
-                    loadedImageDataList.Add(newImageData);
-                }
-            }
-
-            GenDictsAndSaveLibrary();
-            return newImages;
-        }
-
-        public static void OpenCurrentLibrarySourceFolder()
-        {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = ActiveLibrary.Dirpath,
-                UseShellExecute = true
-            });
-        }
-        public static void RemoveTag(string tag)
-        {
-            if (!DB.tagIndex.ContainsKey(tag)) return;
-
-            foreach (ImageData imgData in DB.tagIndex[tag])
-            {
-                imgData.Tags.Remove(tag);
-            }
-            BuildTagDict();
-        }
-        private static void BuildTagDict()
-        {
-            dbUntaggedImageData.Clear();
-            TagDict.Clear();
-
-            int totalEntriesCount = loadedImageDataList.Count;
-
-            foreach (ImageData entry in loadedImageDataList)
-            {
-                if (entry.Tags.Count == 0)
-                {
-                    dbUntaggedImageData.Add(entry);
+                    untagged.Add(img);
                     continue;
                 }
 
-                foreach (string tag in entry.Tags)
+                foreach (TagNode node in img.Tags)
                 {
-                    if (TagDict.ContainsKey(tag))
-                        TagDict[tag]++;
-                    else
-                        TagDict[tag] = 1;
+                    if (!tagDict.TryGetValue(node, out var list))
+                    {
+                        list = new List<ImageData>();
+                        tagDict[node] = list;
+                    }
+                    list.Add(img);
                 }
             }
 
-            //alphabetize
-            TagDict = TagDict.OrderBy(kvp => kvp.Key)
-                         .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            tagDict.Add(new TagNode("all"), imgList);
+            tagDict.Add(new TagNode("untagged"), untagged);
 
-            //TreesPanel.Populate(TagDict, dbUntaggedImageData.Count, totalEntriesCount);
+            return new TagTreeData(tagDict, imgList.Count, untagged.Count);
         }
 
-        public static void CopyImageFilesToLibraryDir(string[] filepaths)
-        {
-            foreach (string filepath in filepaths)
-            {
-                if (File.Exists(filepath))
-                {
-                    string filename = Path.GetFileName(filepath);
-                    string destFilepath = Path.Combine(ActiveLibrary.Dirpath, filename);
-                    File.Copy(filepath, destFilepath, overwrite: false);
-                }
-            }
-        }
+
     }
 }

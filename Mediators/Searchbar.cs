@@ -36,7 +36,7 @@ namespace Calypso
 
         private static void FocusSearch(object sender, EventArgs e)
         {
-            Mediator.FocusedPane = Pane.Searchbar;
+            MainWindow.FocusedPane = Pane.Searchbar;
             mainW.searchBox.Focus();
         }
     }

@@ -15,46 +15,18 @@ namespace Calypso
         {
             DBManager.mainW = mainW;
             DB.OnNewLibraryLoaded += OnNewLibraryLoaded;
-
-            Start();
-        }
-
-        private static void Start()
-        {
-            bool jsonExists;
-            DB.Init(out jsonExists);
-
-            Session sessionData = default;
-
-            if (DB.RetrieveSession(out sessionData))
-            {
-                mainW.LoadSession(sessionData);
-            }
-
-            if (jsonExists && DB.ReadDBJson())
-            {
-                DB.LoadActiveLibrary();
-            }
-            else if (DB.CreateDBJson())
-            {
-                DB.LoadActiveLibrary();
-            }
-            else return;
-
-            PopulateLibraryUI();
-
         }
         public static void LoadLibrary(int num)
         {
-            if (DB.Libraries.ElementAtOrDefault(num-1) != null)
-            {
-                DB.LoadLibrary(DB.Libraries[num-1]);
-            }
+            //if (DB.Libraries.ElementAtOrDefault(num-1) != null)
+            //{
+            //    DB.LoadLibrary(DB.Libraries[num-1]);
+            //}
         }
         static void OnNewLibraryLoaded(Library lib)
         {
             Searchbar.Search("all");
-            mainW.Text = Mediator.MainWindowTitle + " - " + lib.Name;
+            mainW.Text = MainWindow.MainWindowTitle + " - " + lib.Name;
         }
         static void PopulateLibraryUI()
         {
@@ -73,7 +45,7 @@ namespace Calypso
                 mainW.openExistingLibraryToolStripMenuItem.DropDownItems.Remove(item);
             }
 
-            foreach (Library lib in DB.Libraries)
+            foreach (Library lib in DB.appdata.Libraries)
             {
                 ToolStripMenuItem newItem = new ToolStripMenuItem(lib.Name);
                 //if (lib == DBUtility.ActiveLibrary) newItem.Enabled = false;

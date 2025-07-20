@@ -4,41 +4,65 @@ using System.Windows.Forms;
 
 namespace Calypso
 {
+    public enum Pane
+    {
+        TagSideTab,
+        Gallery,
+        Searchbar
+    }
     public partial class MainWindow : Form
     {
-
+        public static MainWindow i; 
+        public static string MainWindowTitle = "Calypso";
+        public static Pane FocusedPane;
         public MainWindow()
         {
+            CreateSingleton();
+
             InitializeComponent();
             this.KeyPreview = true;
             this.FormClosed += MainWindow_FormClosed;
             this.MouseWheel += MainWindow_MouseWheel;
 
-            Mediator.Init(this);
+            Activate();
+            Focus();
 
-            var myList = new List<TagNode> 
-            { 
-                new() { Tag = "banana", ContentCount = 6, Children = 
-                    new() { 
-                        new() { Tag = "genz", ContentCount = 3, Children =
-                            new() {
-                                new() { Tag = "d", ContentCount = 3 }
-                            }  } 
-                    } 
-                }, 
-                new() { Tag = "pineapple", ContentCount = 6 }
+            comboBoxResultsNum.SelectedIndex = 0;
+
+            // start initialization
+            Gallery.Init(this); // in order to load the last session properly gallery references must be initialized first
+            StatusBar.Init(this);
+            ImageInfoPanel.Init(this);
+            Searchbar.Init(this);
+            TagEditManager.Init(this);
+            LayoutManager.Init(this);
+
+
+            if (DB.Init(this))
+            {
+                TreesPanel.Init(this);
+                TreesPanel.Populate(DB.ActiveTagTree);
+            }
+
             
-            };
-
-
-            TreesPanel.Populate(myList, 15, 16);
         }
+        private void CreateSingleton()
+        {
 
+            if (i == null)
+            {
+                i = this;
+            }
+            else
+            {
+                Util.ShowErrorDialog("There are multiple main window instances. That's probably a problem.");
+            }
+        }
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             Control focused = Form.ActiveForm?.ActiveControl;
 
-            bool searchBoxFocused = (Mediator.FocusedPane != Pane.Searchbar);
+            bool searchBoxFocused = (FocusedPane != Pane.Searchbar);
 
             #region single key shortcuts
             if (keyData == Keys.R)
@@ -77,11 +101,11 @@ namespace Calypso
 
             else if (keyData == Keys.Delete)
             {
-                if (Mediator.FocusedPane == Pane.Gallery) Gallery.DeleteSelected();
+                if (FocusedPane == Pane.Gallery) Gallery.DeleteSelected();
             }
             #endregion
 
-            // ctrl shortcuts --------------------------------------------------------------------------------
+            #region control shortcuts
             if (keyData == (Keys.Control | Keys.Q))
             {
                 Close();
@@ -129,8 +153,13 @@ namespace Calypso
             else if (keyData == (Keys.Control | Keys.S))
             {
                 MessageBox.Show($"{masterSplitContainer.SplitterDistance}");
+                return true;
+            }
 
-
+            else if (keyData == (Keys.Control | Keys.T))
+            {
+                string newTag = TreesPanel.OpenPrompt();
+                DB.appdata.ActiveLibrary.AddTag(new TagNode(newTag));
                 return true;
             }
             else if (keyData == (Keys.Control | Keys.I))
@@ -147,12 +176,13 @@ namespace Calypso
 
             else if (keyData == Keys.Enter)
             {
-                if (Mediator.FocusedPane == Pane.Gallery)
+                if (FocusedPane == Pane.Gallery)
                 {
                     Gallery.OpenSelected();
                 }
                 return true;
             }
+            #endregion
 
             // shift
             else if ((keyData & (Keys.Control | Keys.Shift)) == (Keys.Control | Keys.Shift))
@@ -180,22 +210,38 @@ namespace Calypso
             this.Width = session.WindowWidth;
             this.checkBoxRandomize.Checked = session.RandomiseChecked;
             this.WindowState = session.WindowState;
-            DB.ActiveLibrary = session.LastActiveLibrary;
+            DB.appdata.ActiveLibrary = session.LastActiveLibrary;
             Gallery.Zoom = session.ZoomFactor;
         }
 
         private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Session session = new Session()
-            {
-                WindowHeight = this.Height,
-                WindowWidth = this.Width,
-                RandomiseChecked = this.checkBoxRandomize.Checked,
-                WindowState = this.WindowState,
-                LastActiveLibrary = DB.ActiveLibrary,
-                ZoomFactor = Gallery.Zoom
-            };
-            DB.SaveSession(session);
+            DB.OnClose(CaptureCurrentSession());
+        }
+
+        public Session CaptureCurrentSession()
+        {
+            return new Session(
+                windowHeight: this.Height,
+                windowWidth: this.Width,
+                randomiseChecked: this.checkBoxRandomize.Checked,
+                windowState: this.WindowState,
+                lastActiveLibrary: DB.appdata.ActiveLibrary,
+                zoomFactor: Gallery.Zoom
+            );
+        }
+
+        // overload to insert custom library into the session object
+        public Session CaptureCurrentSession(Library lib)
+        {
+            return new Session(
+                windowHeight: this.Height,
+                windowWidth: this.Width,
+                randomiseChecked: this.checkBoxRandomize.Checked,
+                windowState: this.WindowState,
+                lastActiveLibrary: lib,
+                zoomFactor: Gallery.Zoom
+            );
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
