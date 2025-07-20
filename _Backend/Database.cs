@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing.Imaging;
+using System.Xml.Linq;
 
 namespace Calypso
 {
@@ -155,15 +156,27 @@ namespace Calypso
 
         public static void GenDictAndSaveLibrary()
         {
-            ActiveTagTree = GenCurrentTagTree();
+            ActiveTagTree = GenTagDictionary();
             Util.Save<Appdata>(appdata, appdataFilePath);
         }
 
-        public static TagTreeData GenCurrentTagTree()
+        public static TagTreeData GenTagDictionary()
         {
             Dictionary<TagNode, List<ImageData>> tagDict = new();
             List<ImageData> untagged = new();
             List<ImageData> imgList = appdata.ActiveLibrary.ImageDataList;
+
+            foreach (TagNode tag in appdata.ActiveLibrary.TagNodeList)
+            {
+                if (!tagDict.TryGetValue(tag, out var list)) // if not an entry in tagDict already
+                {
+                    list = new List<ImageData>();
+                    tagDict[tag] = list;
+                }
+            }
+
+            tagDict.TryAdd(new TagNode("all"), imgList);
+            tagDict.TryAdd(new TagNode("untagged"), untagged);
 
             foreach (ImageData img in imgList)
             {
@@ -183,9 +196,6 @@ namespace Calypso
                     list.Add(img);
                 }
             }
-
-            tagDict.Add(new TagNode("all"), imgList);
-            tagDict.Add(new TagNode("untagged"), untagged);
 
             return new TagTreeData(tagDict, imgList.Count, untagged.Count);
         }

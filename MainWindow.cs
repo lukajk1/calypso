@@ -1,3 +1,4 @@
+
 using Calypso.UI;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -37,14 +38,18 @@ namespace Calypso
             TagEditManager.Init(this);
             LayoutManager.Init(this);
 
+            //SerializationTest.CreateJson();
+            SerializationTest.ReadFromJson();
 
-            if (DB.Init(this))
-            {
-                TreesPanel.Init(this);
-                TreesPanel.Populate(DB.ActiveTagTree);
-            }
+            new TagTreePanel(this);
+                //TreesPanel.Populate(DB.ActiveTagTree);
+            //if (DB.Init(this))
+            //{
+            //    TreesPanel.Init(this);
+            //    //TreesPanel.Populate(DB.ActiveTagTree);
+            //}
 
-            
+
         }
         private void CreateSingleton()
         {
@@ -158,7 +163,7 @@ namespace Calypso
 
             else if (keyData == (Keys.Control | Keys.T))
             {
-                string newTag = TreesPanel.OpenPrompt();
+                TagTreePanel.OpenTagTextPrompt(out string newTag);
                 DB.appdata.ActiveLibrary.AddTag(new TagNode(newTag));
                 return true;
             }
@@ -314,22 +319,22 @@ namespace Calypso
 
         private void removeTagToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            TreesPanel.RenameTag(sender);
+            TagTreePanel.i.RenameTag(sender);
         }
 
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            TreesPanel.DeleteTag(sender);
+            TagTreePanel.i.DeleteTag(sender);
         }
 
         private void addChildTagToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            TreesPanel.AddChildNode(sender);
+            TagTreePanel.i.AddChildTag(sender);
         }
 
         private void addNewTagToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            TreesPanel.PromptAddTag();
+            TagTreePanel.i.PromptAddTag();
         }
     }
 }

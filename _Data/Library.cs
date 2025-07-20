@@ -7,13 +7,19 @@ namespace Calypso
     {
         public string Name { get; set; }
         public string Dirpath { get; set; }
-        public List<TagNode> TagTree { get; set; } = new();
+        public List<TagNode> TagNodeList { get; set; } = new();
         public List<ImageData> ImageDataList { get; set; } = new();
 
         public Library(string name, string dirpath) 
         {
             Name = name;
             Dirpath = dirpath;
+        }
+
+        private void UpdateTagStructure()
+        {
+            DB.GenDictAndSaveLibrary();
+            //TagTreePanel.i.Populate(DB.ActiveTagTree);
         }
 
         public bool AddTag(TagNode newTag)
@@ -25,7 +31,7 @@ namespace Calypso
                 return false;
             }
 
-            foreach (TagNode node in TagTree)
+            foreach (TagNode node in TagNodeList)
             {
                 if (node.Name == newTag.Name)
                 {
@@ -34,11 +40,29 @@ namespace Calypso
                 }
             }
 
-            TagTree.Add(newTag);
-            Debug.WriteLine("tagtree length: " + TagTree.Count);
-
-            TreesPanel.Populate(DB.GenCurrentTagTree());
+            TagNodeList.Add(newTag);
+            Debug.WriteLine("tagtree length: " + TagNodeList.Count);
+            
+            UpdateTagStructure();
             return true;
         }
+
+        public bool RemoveTag(string tag)
+        {
+            List<TagNode> toRemove = new();
+
+            foreach (TagNode node in TagNodeList)
+            {
+                if (node.Name == tag || node.Parent == tag)
+                    toRemove.Add(node);
+            }
+
+            foreach (var node in toRemove)
+                TagNodeList.Remove(node);
+
+            UpdateTagStructure();
+            return toRemove.Count > 0;
+        }
+
     }
 }

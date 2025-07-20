@@ -34,8 +34,6 @@ namespace Calypso
                 MessageBoxIcon.Question);
         }
 
-
-
         public static string[] GetAllImageFilepaths(string path)
         {
            return System.IO.Directory.GetFiles(path, "*.*")

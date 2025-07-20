@@ -8,13 +8,15 @@ namespace Calypso
 {
     public struct TagNode
     {
+        public int Depth {  get; set; }
         public string Parent { get; set; }
         public string Name { get; set; }
 
-        public TagNode(string tag, string parent = "") // parent empty by default
+        public TagNode(string tag, string parent = "", int depth = 0) // parent empty by default
         {
             Name = tag;
             Parent = parent;
+            Depth = depth;
         }    
     }
 }

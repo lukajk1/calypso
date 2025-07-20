@@ -1,5 +1,4 @@
-﻿using MetadataExtractor;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -112,7 +111,7 @@ namespace Calypso
 
                 checkedListBoxTags.Items.Remove(checkedListBoxTags.SelectedItem);
 
-                DB.RemoveTag(tag);
+                //DB.RemoveTag(tag);
                 DB.GenDictAndSaveLibrary();
                 e.Handled = true;
             }

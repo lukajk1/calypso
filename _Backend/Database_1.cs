@@ -117,7 +117,6 @@ namespace Calypso
         }
         #endregion
 
-
         public static Dictionary<string, ImageData> GenerateFilenameDict(List<ImageData> allImages)
         {
             var filenameIndex = new Dictionary<string, ImageData>(StringComparer.OrdinalIgnoreCase);
@@ -157,7 +156,18 @@ namespace Calypso
 
             GenDictAndSaveLibrary();
         }
-
+        public static TagNode? StringToTagNode(string tag)
+        {
+            foreach (TagNode node in appdata.ActiveLibrary.TagNodeList)
+            {
+                if (node.Name == tag)
+                {
+                    return node;
+                }
+            }
+            // otherwise
+            return null;
+        }
         public static void RemoveLibrary(Library library) { }
         public static void AddNewLibrary()
         {
@@ -192,16 +202,6 @@ namespace Calypso
                 FileName = appdata.ActiveLibrary.Dirpath,
                 UseShellExecute = true
             });
-        }
-        public static void RemoveTag(string tag)
-        {
-            //if (!DB.tagIndex.ContainsKey(tag)) return;
-
-            //foreach (ImageData imgData in DB.tagIndex[tag])
-            //{
-            //    imgData.Tags.Remove(tag);
-            //}
-            //GenTagTree();
         }
 
         public static List<ImageData> AddFilesToLibrary(string[] filepaths)
