@@ -7,8 +7,9 @@ namespace Calypso
     {
         public string Name { get; set; }
         public string Dirpath { get; set; }
-        public List<TagNode> TagNodeList { get; set; } = new();
-        public List<ImageData> ImageDataList { get; set; } = new();
+        public TagTreeRefactor tagTree { get; set; } = new();
+        public Dictionary<string, List<ImageData>> tagDict { get; set; } = new();
+        public Dictionary<string, ImageData> filenameDict { get; set; } = new();
 
         public Library(string name, string dirpath) 
         {
@@ -18,8 +19,8 @@ namespace Calypso
 
         private void UpdateTagStructure()
         {
-            DB.GenDictAndSaveLibrary();
-            //TagTreePanel.i.Populate(DB.ActiveTagTree);
+            DB.GenTagDictAndSaveLibrary();
+            TagTreePanel.i.Populate(tagTree, tagDict);
         }
 
         public bool AddTag(TagNode newTag)
@@ -31,7 +32,7 @@ namespace Calypso
                 return false;
             }
 
-            foreach (TagNode node in TagNodeList)
+            foreach (TagNode node in tagTree.tagNodes)
             {
                 if (node.Name == newTag.Name)
                 {
@@ -40,29 +41,45 @@ namespace Calypso
                 }
             }
 
-            TagNodeList.Add(newTag);
-            Debug.WriteLine("tagtree length: " + TagNodeList.Count);
-            
+            tagTree.tagNodes.Add(newTag);
+            tagDict[name] = new List<ImageData>();
+            //Debug.WriteLine("tagtree length: " + TagNodeList.Count);
+
+            UpdateTagStructure();
+            return true;
+        }
+        public bool RemoveTag(string tag)
+        {
+            if (!tagTree.tagNodes.Any(n => n.Name == tag))
+                return false;
+
+            List<TagNode> toRemove = new();
+            Queue<string> queue = new();
+            queue.Enqueue(tag);
+
+            while (queue.Count > 0)
+            {
+                string current = queue.Dequeue();
+                TagNode node = tagTree.tagNodes.First(n => n.Name == current);
+                toRemove.Add(node);
+
+                foreach (string child in node.Children)
+                    queue.Enqueue(child);
+            }
+
+            foreach (var node in toRemove)
+            {
+                tagTree.tagNodes.Remove(node);
+                tagDict.Remove(node.Name);
+            }
+
             UpdateTagStructure();
             return true;
         }
 
-        public bool RemoveTag(string tag)
-        {
-            List<TagNode> toRemove = new();
 
-            foreach (TagNode node in TagNodeList)
-            {
-                if (node.Name == tag || node.Parent == tag)
-                    toRemove.Add(node);
-            }
 
-            foreach (var node in toRemove)
-                TagNodeList.Remove(node);
 
-            UpdateTagStructure();
-            return toRemove.Count > 0;
-        }
 
     }
 }

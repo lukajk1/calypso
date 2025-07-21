@@ -38,9 +38,7 @@ namespace Calypso
             TagEditManager.Init(this);
             LayoutManager.Init(this);
 
-            //SerializationTest.CreateJson();
-            SerializationTest.ReadFromJson();
-
+            DB.Init(this);
             new TagTreePanel(this);
                 //TreesPanel.Populate(DB.ActiveTagTree);
             //if (DB.Init(this))
@@ -163,8 +161,10 @@ namespace Calypso
 
             else if (keyData == (Keys.Control | Keys.T))
             {
-                TagTreePanel.OpenTagTextPrompt(out string newTag);
-                DB.appdata.ActiveLibrary.AddTag(new TagNode(newTag));
+                if (TagTreePanel.OpenTagTextPrompt(out string newTag))
+                {
+                    DB.appdata.ActiveLibrary.AddTag(new TagNode(newTag));
+                }
                 return true;
             }
             else if (keyData == (Keys.Control | Keys.I))
@@ -324,6 +324,7 @@ namespace Calypso
 
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
+
             TagTreePanel.i.DeleteTag(sender);
         }
 

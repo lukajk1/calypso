@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -13,54 +14,54 @@ namespace Calypso
         #region searching
         public static void Search(string searchTextRaw, bool randomize, int upperLimit)
         {
-            if (ActiveTagTree == null) return;
+        //    if (ActiveTagTree == null) return;
 
-            List<ImageData> results = new();
-            string[] tagsInclude = { };
-            string[] tagsExclude = { };
+        //    List<ImageData> results = new();
+        //    string[] tagsInclude = { };
+        //    string[] tagsExclude = { };
 
-            string stripped = new string(searchTextRaw.Where(c => !char.IsWhiteSpace(c)).ToArray());
-            stripped = stripped.ToLower();
+        //    string stripped = new string(searchTextRaw.Where(c => !char.IsWhiteSpace(c)).ToArray());
+        //    stripped = stripped.ToLower();
 
-            if (stripped == "randtag" || stripped == "rtag" || stripped == "randomtag")
-            {
-                var random = new Random();
+        //    if (stripped == "randtag" || stripped == "rtag" || stripped == "randomtag")
+        //    {
+        //        var random = new Random();
 
-                if (!(ActiveTagTree.TagDict.Count < 3)) // all tagdicts have 2 elements by default, all and untagged
-                {
-                    return;
-                }
-                else
-                {
-                    // implement eventually maybe
-                    return;
-                }
+        //        if (!(ActiveTagTree.TagDict.Count < 3)) // all tagdicts have 2 elements by default, all and untagged
+        //        {
+        //            return;
+        //        }
+        //        else
+        //        {
+        //            // implement eventually maybe
+        //            return;
+        //        }
 
-            }
-            else
-            {
-                foreach (var kvp in ActiveTagTree.TagDict)
-                {
-                    if (kvp.Key.Name == stripped)
-                    {
-                        results = kvp.Value;
-                        break;
-                    }
-                }
-            }
+        //    }
+        //    else
+        //    {
+        //        foreach (var kvp in ActiveTagTree.TagDict)
+        //        {
+        //            if (kvp.Key.Name == stripped)
+        //            {
+        //                results = kvp.Value;
+        //                break;
+        //            }
+        //        }
+        //    }
 
-            if (randomize)
-            {
-                var rng = new Random();
-                results = results.OrderBy(_ => rng.Next()).ToList();
-            }
+        //    if (randomize)
+        //    {
+        //        var rng = new Random();
+        //        results = results.OrderBy(_ => rng.Next()).ToList();
+        //    }
 
-            if (upperLimit > 0 && upperLimit < results.Count)
-            {
-                results = results.Take(upperLimit).ToList();
-            }
+        //    if (upperLimit > 0 && upperLimit < results.Count)
+        //    {
+        //        results = results.Take(upperLimit).ToList();
+        //    }
 
-            Gallery.Populate(results);
+        //    Gallery.Populate(results);
         }
         public static void ParseQuery(string input, out string[] tagInclude, out string[] tagExclude)
         {
@@ -117,6 +118,48 @@ namespace Calypso
         }
         #endregion
 
+        private static void Save()
+        {
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+                    Formatting = Formatting.Indented
+                };
+
+                string json = JsonConvert.SerializeObject(appdata, settings);
+                File.WriteAllText(appdataFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to save appdata: {ex.Message}");
+            }
+        }
+
+
+        private static bool Load()
+        {
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    PreserveReferencesHandling = PreserveReferencesHandling.Objects
+                };
+
+                string json = File.ReadAllText(appdataFilePath);
+                appdata = JsonConvert.DeserializeObject<Appdata>(json, settings);
+
+                return appdata != null;
+            }
+            catch (Exception ex)
+            {
+                Util.ShowErrorDialog($"Failed to load appdata: {ex.Message}");
+                return false;
+            }
+        }
+
+
         public static Dictionary<string, ImageData> GenerateFilenameDict(List<ImageData> allImages)
         {
             var filenameIndex = new Dictionary<string, ImageData>(StringComparer.OrdinalIgnoreCase);
@@ -133,32 +176,32 @@ namespace Calypso
         public static void OnClose(Session session)
         {
             appdata.LastSession = session;
-            Util.Save<Appdata>(appdata, appdataFilePath);
+            Save();
         }
 
         #region miscellaneous helpers
         public static void DeleteImageData(List<ImageData> imgDataList)
         {
-            foreach (ImageData imgData in imgDataList)
-            {
-                appdata.ActiveLibrary.ImageDataList.Remove(imgData);
+            //foreach (ImageData imgData in imgDataList)
+            //{
+            //    appdata.ActiveLibrary.ImageDataList.Remove(imgData);
 
-                if (File.Exists(imgData.ThumbnailPath))
-                {
-                    File.Delete(imgData.ThumbnailPath);
-                }
+            //    if (File.Exists(imgData.ThumbnailPath))
+            //    {
+            //        File.Delete(imgData.ThumbnailPath);
+            //    }
 
-                if (File.Exists(imgData.Filepath))
-                {
-                    File.Delete(imgData.Filepath);
-                }
-            }
+            //    if (File.Exists(imgData.Filepath))
+            //    {
+            //        File.Delete(imgData.Filepath);
+            //    }
+            //}
 
-            GenDictAndSaveLibrary();
+            //GenTagDictAndSaveLibrary();
         }
         public static TagNode? StringToTagNode(string tag)
         {
-            foreach (TagNode node in appdata.ActiveLibrary.TagNodeList)
+            foreach (TagNode node in appdata.ActiveLibrary.tagTree.tagNodes)
             {
                 if (node.Name == tag)
                 {
@@ -206,43 +249,43 @@ namespace Calypso
 
         public static List<ImageData> AddFilesToLibrary(string[] filepaths)
         {
-            string targetDir = appdata.ActiveLibrary.Dirpath;
-            string thumbSavePath = string.Empty;
-            string destPath = string.Empty;
-            List<ImageData> newImages = new();
+            //string targetDir = appdata.ActiveLibrary.Dirpath;
+            //string thumbSavePath = string.Empty;
+            //string destPath = string.Empty;
+            //List<ImageData> newImages = new();
 
-            foreach (string fp in filepaths)
-            {
-                // copy to main folder
-                string filename = string.Empty;
-                string ext = Path.GetExtension(fp).ToLower();
-                if (ext is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".gif")
-                {
-                    filename = Path.GetFileName(fp);
-                    destPath = Path.Combine(targetDir, filename);
+            //foreach (string fp in filepaths)
+            //{
+            //    // copy to main folder
+            //    string filename = string.Empty;
+            //    string ext = Path.GetExtension(fp).ToLower();
+            //    if (ext is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".gif")
+            //    {
+            //        filename = Path.GetFileName(fp);
+            //        destPath = Path.Combine(targetDir, filename);
 
-                    if (!File.Exists(destPath))
-                    {
-                        File.Copy(fp, destPath, overwrite: false);
-                        thumbSavePath = Util.CreateThumbnail(appdata.ActiveLibrary, destPath);
-                    }
-                    else
-                    {
-                        Util.ShowErrorDialog($"A file named {filename} already exists in {targetDir}!");
-                        return null;
-                    }
-                }
+            //        if (!File.Exists(destPath))
+            //        {
+            //            File.Copy(fp, destPath, overwrite: false);
+            //            thumbSavePath = Util.CreateThumbnail(appdata.ActiveLibrary, destPath);
+            //        }
+            //        else
+            //        {
+            //            Util.ShowErrorDialog($"A file named {filename} already exists in {targetDir}!");
+            //            return null;
+            //        }
+            //    }
 
-                if (thumbSavePath != string.Empty && filename != string.Empty)
-                {
-                    ImageData newImageData = new(destPath, thumbSavePath);
-                    newImages.Add(newImageData);
-                    appdata.ActiveLibrary.ImageDataList.Add(newImageData);
-                }
-            }
+            //    if (thumbSavePath != string.Empty && filename != string.Empty)
+            //    {
+            //        ImageData newImageData = new(destPath, thumbSavePath);
+            //        newImages.Add(newImageData);
+            //        appdata.ActiveLibrary.ImageDataList.Add(newImageData);
+            //    }
+            //}
 
-            GenDictAndSaveLibrary();
-            return newImages;
+            GenTagDictAndSaveLibrary();
+            return new List<ImageData>();
         }
         #endregion
     }

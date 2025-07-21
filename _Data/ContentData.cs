@@ -10,10 +10,10 @@ namespace Calypso
     {
         public string Filepath { get; protected set; }
         public string Filename { get; protected set; }
-        public List<TagNode> Tags { get; set; } = new(); // still allows addition and removal of tags
+        public List<string> Tags { get; set; } = new(); // still allows addition and removal of tags
         public string GetFileExtension() => Path.GetExtension(Filepath);
         public bool FileExists() => File.Exists(Filepath);
-        public void AddTags(List<TagNode> tags)
+        public void AddTags(List<string> tags)
         {
             foreach(var tag in tags)
             {

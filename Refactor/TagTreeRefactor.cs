@@ -11,11 +11,6 @@ namespace Calypso
     {
         public List<TagNode> tagNodes { get; set; } = new();
 
-        public TagTreeRefactor()
-        {
-
-        }
-
         public TagNode? Lookup(string tagName)
         {
             foreach (TagNode tag in tagNodes)
@@ -39,16 +34,4 @@ namespace Calypso
 
         }
     }
-
-    //public class TagNodeRefactor
-    //{
-    //    public string Name { get; set; }
-    //    public TagNodeRefactor? Parent { get; set; }
-    //    public List<TagNodeRefactor> Children { get; } = new();
-    //    public TagNodeRefactor(string name, string parent = "")
-    //    {
-    //        this.Name = name;
-    //        this.Parent = parent;
-    //    }
-    //}
 }

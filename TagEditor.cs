@@ -112,7 +112,7 @@ namespace Calypso
                 checkedListBoxTags.Items.Remove(checkedListBoxTags.SelectedItem);
 
                 //DB.RemoveTag(tag);
-                DB.GenDictAndSaveLibrary();
+                DB.GenTagDictAndSaveLibrary();
                 e.Handled = true;
             }
         }
@@ -155,7 +155,7 @@ namespace Calypso
             //    tTag._ImageData.AddTags(checkedTags);
             //}
 
-            DB.GenDictAndSaveLibrary();
+            DB.GenTagDictAndSaveLibrary();
 
             this.CloseForm();
         }

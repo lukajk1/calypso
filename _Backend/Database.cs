@@ -21,26 +21,11 @@ namespace Calypso
             LastSession = lastSession;
         }
     }
-    
-    public class TagTreeData
-    {
-        public Dictionary<TagNode, List<ImageData>> TagDict = new();
-        public int UntaggedCount { get; set; }
-        public int TotalEntries { get; set; }
-
-        public TagTreeData(Dictionary<TagNode, List<ImageData>> tagDict, int totalEntries, int untaggedCount)
-        {
-            TagDict = tagDict;
-            TotalEntries = totalEntries;
-            UntaggedCount = untaggedCount;
-        }
-    }
 
     internal static partial class DB
     {
         public static Appdata appdata;
         private static string appdataFilePath = string.Empty;
-        public static TagTreeData ActiveTagTree;
 
         // events
         public static event Action<Library>? OnNewLibraryLoaded;
@@ -53,7 +38,7 @@ namespace Calypso
             appdataFilePath = Path.Combine(myAppFolder, "database.save");
 
             // exclamation is null-forgiving operator
-            if (Util.TryLoad<Appdata>(appdataFilePath, out appdata) || (appdata = NewAppdata()!) != null)
+            if (Load() || (appdata = NewAppdata()!) != null)
             {
                 mainW.LoadSession(appdata.LastSession);
                 LoadLibrary(appdata.LastSession.LastActiveLibrary);
@@ -79,7 +64,7 @@ namespace Calypso
                     lastSession: MainWindow.i.CaptureCurrentSession(newLib)
                 );
 
-                Util.Save<Appdata>(newAppdata, appdataFilePath);
+                Save();
                 return newAppdata;
             }
 
@@ -107,10 +92,22 @@ namespace Calypso
             libraryPath = "";
             return false;
         }
+        
+        private static void AddNewEntriesToFilenameDict(string[] newImageFilepaths)
+        {
+            foreach (string filename in newImageFilepaths)
+            {
+                if (!appdata.ActiveLibrary.filenameDict.ContainsKey(filename))
+                {
+                    ImageData newImage = new(filename, Util.CreateThumbnail(appdata.ActiveLibrary, filename));
+                    appdata.ActiveLibrary.filenameDict[filename] = newImage;
 
+                }
+            }
+        }
+        
         public static void LoadLibrary(Library lib)
         {
-            Debug.WriteLine(lib.Dirpath);
             appdata.ActiveLibrary = lib;
 
             if (!Directory.Exists(lib.Dirpath))
@@ -122,82 +119,50 @@ namespace Calypso
             string thumbPath = Path.Combine(lib.Dirpath, "data");
             if (!Directory.Exists(thumbPath)) Directory.CreateDirectory(thumbPath);
 
-            string[] allImageFiles = Util.GetAllImageFilepaths(lib.Dirpath);
-            List<string> unregisteredImages = allImageFiles.ToList();
+            string[] allImageFilepaths = Util.GetAllImageFilepaths(lib.Dirpath);
+            List<string> unregisteredImages = allImageFilepaths.ToList();
 
-            // build the unregistered image list by removing the ones that have an imagedata object already
-            foreach (ImageData img in lib.ImageDataList)
-            {
-                if (allImageFiles.Contains(img.Filepath))
-                {
-                    unregisteredImages.Remove(img.Filepath);
-                }
-            }
+            // add any new filepaths that don't have an entry in filenamedict to it
+            AddNewEntriesToFilenameDict(allImageFilepaths);
 
-            // create an imagedata wrapper for each new file
-            foreach (string file in unregisteredImages)
+            // check all thumbnails are valid -- generate if not
+            foreach (var kvp in appdata.ActiveLibrary.filenameDict)
             {
-                ImageData newImage = new(file, Util.CreateThumbnail(lib, file));
-                lib.ImageDataList.Add(newImage);
-            }
-
-            // if any other imagedata do not have a valid thumbnail, generate.
-            foreach (ImageData img in lib.ImageDataList)
-            {
+                ImageData img = kvp.Value;
                 if (!File.Exists(img.ThumbnailPath))
                 {
                     Util.CreateThumbnail(lib, img.Filepath);
                 }
             }
 
-            GenDictAndSaveLibrary();
+            SetAllAndUntaggedToDict();
+            Save();
+            Debug.WriteLine("hopefullythis works" + appdata.ActiveLibrary.filenameDict.Count);
+
             OnNewLibraryLoaded?.Invoke(lib);
         }
 
-        public static void GenDictAndSaveLibrary()
+        public static void GenTagDictAndSaveLibrary()
         {
-            ActiveTagTree = GenTagDictionary();
-            Util.Save<Appdata>(appdata, appdataFilePath);
+            SetAllAndUntaggedToDict();
+            Save();
         }
 
-        public static TagTreeData GenTagDictionary()
+        public static void SetAllAndUntaggedToDict()
         {
-            Dictionary<TagNode, List<ImageData>> tagDict = new();
+            Dictionary<string, List<ImageData>> tagDict = appdata.ActiveLibrary.tagDict;
             List<ImageData> untagged = new();
-            List<ImageData> imgList = appdata.ActiveLibrary.ImageDataList;
+            List<ImageData> allImages = new();
 
-            foreach (TagNode tag in appdata.ActiveLibrary.TagNodeList)
+            foreach (var kvp in appdata.ActiveLibrary.filenameDict)
             {
-                if (!tagDict.TryGetValue(tag, out var list)) // if not an entry in tagDict already
-                {
-                    list = new List<ImageData>();
-                    tagDict[tag] = list;
-                }
+                allImages.Add(kvp.Value);
+                if (kvp.Value.Tags.Count == 0) untagged.Add(kvp.Value);
             }
 
-            tagDict.TryAdd(new TagNode("all"), imgList);
-            tagDict.TryAdd(new TagNode("untagged"), untagged);
+            tagDict["all"] = allImages;
+            tagDict["untagged"] = untagged;
 
-            foreach (ImageData img in imgList)
-            {
-                if (img.Tags.Count == 0)
-                {
-                    untagged.Add(img);
-                    continue;
-                }
-
-                foreach (TagNode node in img.Tags)
-                {
-                    if (!tagDict.TryGetValue(node, out var list))
-                    {
-                        list = new List<ImageData>();
-                        tagDict[node] = list;
-                    }
-                    list.Add(img);
-                }
-            }
-
-            return new TagTreeData(tagDict, imgList.Count, untagged.Count);
         }
 
 

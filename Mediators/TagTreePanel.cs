@@ -15,7 +15,6 @@ namespace Calypso
         // main refs
         private TreeView tagTree;
         private MainWindow mainW;
-        TagTreeRefactor ttr;
         public static TagTreePanel i;
 
         // internal use
@@ -27,44 +26,27 @@ namespace Calypso
             this.mainW = mainW;
             tagTree = mainW.tagTree;
 
-            ttr = new TagTreeRefactor();
-
-            ttr.tagNodes = new()
-            {
-                new TagNode("tag5", "tag4", 2),
-                new TagNode("tag4", "tag2", 1),
-                new TagNode("tag1"),
-                new TagNode("tag2"),
-                new TagNode("tag3")
-            };
-            ttr.OrderByDepthAndAlphabetical();
-            Populate(ttr);
-
-            var json = JsonConvert.SerializeObject(ttr, Formatting.Indented);
-            File.WriteAllText("C:\\Users\\lukaj\\My Drive\\archive\\images\\output.json", json);
-
-
+            Populate(DB.appdata.ActiveLibrary.tagTree, DB.appdata.ActiveLibrary.tagDict);
         }
 
-        //public void Populate(TagTreeRefactor tagTreeRefactor, Dictionary<string, ImageData> taggedImageDict)
-        public void Populate(TagTreeRefactor tagTreeRefactor)
+        public void Populate(TagTreeRefactor tagTreeRefactor, Dictionary<string, List<ImageData>> tagDict)
         {
             tagTree.Nodes.Clear();
 
             tagTree.NodeMouseClick -= OnTagNodeClick; // Remove if already attached
             tagTree.NodeMouseClick += OnTagNodeClick; // Attach handler
 
-            GenerateTagTree(tagTreeRefactor);
+            GenerateTagTree(tagTreeRefactor, tagDict);
 
             TreeNode separator = new TreeNode("──────────");
             separator.ForeColor = Color.Gray;
             separator.NodeFont = new Font("Consolas", 8, FontStyle.Regular);
             tagTree.Nodes.Insert(0, separator);
 
-            TreeNode nodeNone = tagTree.Nodes.Insert(0, $"Untagged ()");
+            TreeNode nodeNone = tagTree.Nodes.Insert(0, $"Untagged ({tagDict["untagged"].Count})");
             nodeNone.Tag = "untagged";
 
-            TreeNode nodeAll = tagTree.Nodes.Insert(0, $"All Images ()");
+            TreeNode nodeAll = tagTree.Nodes.Insert(0, $"All Images ({tagDict["all"].Count})");
             nodeAll.Tag = "all";
 
             tagTree.ExpandAll(); 
@@ -75,28 +57,32 @@ namespace Calypso
                 e.Cancel = true; // Prevent collapsing 
             };
         }
-        public void GenerateTagTree(TagTreeRefactor tagTreeRefactor)
+        public void GenerateTagTree(TagTreeRefactor tagTreeRefactor, Dictionary<string, List<ImageData>> tagDict)
         {
             tagTree.BeginUpdate();
             tagTree.Nodes.Clear();
 
             foreach (TagNode node in tagTreeRefactor.tagNodes)
             {
+                int num;
+                if (tagDict.ContainsKey(node.Name))
+                {
+                    num = tagDict[node.Name].Count;
+                }
+                else
+                {
+                    continue;
+                }
 
-            }
-
-            foreach (TagNode node in tagTreeRefactor.tagNodes)
-            {
-                AddToTree(node);
+                AddToTree(node, num);
             }
 
             tagTree.ExpandAll();
             tagTree.EndUpdate();
         }
 
-        private void AddToTree(TagNode node)
+        private void AddToTree(TagNode node, int contentCount)
         {
-            int contentCount = 0;
             string displayText = $"#{node.Name} ({contentCount})";
 
             TreeNode newTreeNode = new TreeNode(displayText)
@@ -111,45 +97,14 @@ namespace Calypso
                     if (parent.Tag is TagNode parentTagNode && parentTagNode.Name == node.Parent)
                     {
                         parent.Nodes.Add(newTreeNode);
-                        Debug.WriteLine($"added {node.Name} to tree");
+                        //Debug.WriteLine($"added {node.Name} to tree");
                     }
                 }
             }
             else
             {
                 tagTree.Nodes.Add(newTreeNode);
-                Debug.WriteLine($"added {node.Name} to tree");
-            }
-        }
-
-        private void AddToTree(TagNode node, Dictionary<TagNode, List<ImageData>> tagDictionary)
-        {
-            Debug.WriteLine($"attempting to add {node.Name} to tree");
-            int contentCount = tagDictionary.TryGetValue(node, out var images) ? images.Count : 0;
-            string displayText = $"#{node.Name} ({contentCount})";
-
-            TreeNode newTreeNode = new TreeNode(displayText)
-            {
-                Tag = node.Name
-            };
-
-            if (node.Parent != string.Empty)
-            {
-                foreach (TreeNode tn in GetAllNodes(tagTree))
-                {
-                    if (tn.Tag is null) continue;
-
-                    if (tn.Tag.ToString() == node.Name)
-                    {
-                        tn.Nodes.Add(newTreeNode);
-                        Debug.WriteLine($"added {node.Name} to tree");
-                    }
-                }
-            }
-            else
-            {
-                tagTree.Nodes.Add(newTreeNode);
-                Debug.WriteLine($"added {node.Name} to tree");
+                //Debug.WriteLine($"added {node.Name} to tree");
             }
         }
 
@@ -203,24 +158,25 @@ namespace Calypso
             {
                 selectedNode.Text = newName;
 
-                if (selectedNode.Tag is TagNode tagNode)
-                {
-                    ttr.Rename(tagNode.Name, newName);
-                }
 
             }
 
         }
-        public  void DeleteTag(object sender)
+        public void DeleteTag(object sender)
         {
             int children = selectedNode.Nodes.Count;
             if (children > 0)
             {
-                Util.ShowConfirmDialog($"This tag has {selectedNode.Nodes.Count} children which will be deleted as well. Proceed?");
+                Util.ShowConfirmDialog($"This tag has children which will be deleted as well. Proceed?");
             }
+            if (selectedNode.Tag is TagNode tn)
+            {
+                Util.ShowInfoDialog("delete" + tn.Name);
+                DB.appdata.ActiveLibrary.RemoveTag(tn.Name);
 
-            DB.appdata.ActiveLibrary.RemoveTag(selectedNode.Name);
+            }
         }
+
         public  void AddChildTag(object sender)
         {
             string parentTag = selectedNode.Tag as string;

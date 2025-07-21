@@ -45,29 +45,6 @@ namespace Calypso
                                .ToArray();
         }
 
-        public static void Save<T>(T obj, string filePath)
-        {
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            string json = JsonSerializer.Serialize(obj, options);
-            File.WriteAllText(filePath, json);
-        }
-
-        public static bool TryLoad<T>(string filePath, out T result)
-        {
-            result = default;
-            try
-            {
-                string json = File.ReadAllText(filePath);
-                result = JsonSerializer.Deserialize<T>(json);
-                return result != null;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-
         public static string CreateThumbnail(Library lib, string originalImagePath)
         {
             string originalFilename = Path.GetFileName(originalImagePath);
