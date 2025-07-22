@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing.Imaging;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Calypso
@@ -107,7 +108,17 @@ namespace Calypso
                 }
             }
         }
-        
+        public static void LoadLibrary(int index)
+        {
+            index -= 1;
+            if (!(index >= 0) || !(index < appdata.Libraries.Count())) return;
+
+            if (appdata.Libraries[index] != appdata.ActiveLibrary)
+            {
+                LoadLibrary(appdata.Libraries[index]);
+
+            }
+        }
         public static void LoadLibrary(Library lib)
         {
             appdata.ActiveLibrary = lib;
@@ -139,7 +150,14 @@ namespace Calypso
 
             SetAllAndUntaggedToDict();
             Save();
-            Debug.WriteLine("hopefullythis works" + appdata.ActiveLibrary.filenameDict.Count);
+            //Debug.WriteLine("hopefullythis works" + appdata.ActiveLibrary.filenameDict.Count);
+
+            Searchbar.Search("all"); // dependencies but whatever
+
+            if (MainWindow.initialized)
+            {
+                TagTreePanel.i.Populate(appdata.ActiveLibrary.tagTree, appdata.ActiveLibrary.tagDict);
+            }
 
             OnNewLibraryLoaded?.Invoke(lib);
         }

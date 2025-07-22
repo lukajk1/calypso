@@ -47,7 +47,7 @@ namespace Calypso
 
         private bool FormatAndValidateNewTag(string input, out string output)
         {
-            output = input.Trim().ToLower();
+            output = input.Trim();
 
             // Check for reserved names before any processing
             if (output == "all" || output == "untagged")

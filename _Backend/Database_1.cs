@@ -20,7 +20,7 @@ namespace Calypso
             string[] tagsExclude = { };
 
             string stripped = new string(searchTextRaw.Where(c => !char.IsWhiteSpace(c)).ToArray());
-            stripped = stripped.ToLower();
+
             if (stripped == "randtag" || stripped == "rtag" || stripped == "randomtag")
             {
                 // implement later..
@@ -56,59 +56,6 @@ namespace Calypso
             }
 
             Gallery.Populate(results);
-        }
-        public static void ParseQuery(string input, out string[] tagInclude, out string[] tagExclude)
-        {
-            var includeList = new List<string>();
-            var excludeList = new List<string>();
-
-            foreach (var tag in input.Split(','))
-            {
-                if (string.IsNullOrWhiteSpace(tag)) continue;
-
-                if (tag.StartsWith("-"))
-                    excludeList.Add(tag[1..]);
-                else
-                    includeList.Add(tag);
-            }
-
-            tagInclude = includeList.ToArray();
-            tagExclude = excludeList.ToArray();
-        }
-        public static List<ImageData> FilterByTags(string[] tagInclude, string[] tagExclude)
-        {
-            var result = tagInclude
-                .Where(tag => tagIndex.ContainsKey(tag))
-                .SelectMany(tag => tagIndex[tag])
-                .Distinct()
-                .ToList();
-
-            //if (tagExclude.Length > 0)
-            //{
-            //    var excludeSet = new HashSet<string>(tagExclude);
-            //    result = result
-            //        .Where(img => img.Tags.All(t => !excludeSet.Contains(t)))
-            //        .ToList();
-            //}
-
-            return result;
-        }
-        public static void GenerateTagDict(List<ImageData> allImages)
-        {
-            //tagIndex.Clear();
-            //foreach (var image in allImages)
-            //{
-            //    foreach (var tag in image.Tags)
-            //    {
-            //        if (!tagIndex.TryGetValue(tag, out var list))
-            //        {
-            //            list = new List<ImageData>();
-            //            tagIndex[tag] = list;
-            //        }
-            //        list.Add(image);
-            //    }
-            //}
-
         }
         #endregion
 
@@ -152,18 +99,6 @@ namespace Calypso
         }
 
 
-        public static Dictionary<string, ImageData> GenerateFilenameDict(List<ImageData> allImages)
-        {
-            var filenameIndex = new Dictionary<string, ImageData>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var image in allImages)
-            {
-                if (!filenameIndex.ContainsKey(image.Filename))
-                    filenameIndex[image.Filename] = image;
-            }
-
-            return filenameIndex;
-        }
 
         public static void OnClose(Session session)
         {
@@ -191,37 +126,17 @@ namespace Calypso
 
             //GenTagDictAndSaveLibrary();
         }
-        public static TagNode? StringToTagNode(string tag)
-        {
-            foreach (TagNode node in appdata.ActiveLibrary.tagTree.tagNodes)
-            {
-                if (node.Name == tag)
-                {
-                    return node;
-                }
-            }
-            // otherwise
-            return null;
-        }
-        public static void RemoveLibrary(Library library) { }
         public static void AddNewLibrary()
         {
-            string libPath;
-            if (PromptUserForLibrary("Add new library?", out libPath))
+            if (appdata.Libraries.Count > 8) Util.ShowErrorDialog("9 is the maximum allowed libraries!");
+
+            if (PromptUserForLibrary("Add new library directory?", out string libraryPath))
             {
-                // if there is a library already registered with that directory, simply open that existing library
-                foreach (Library lib in appdata.Libraries)
-                {
-                    if (lib.Dirpath == libPath)
-                    {
-                        LoadLibrary(lib);
-                        return;
-                    }
-                }
+                Util.TextPrompt("Name this library (can be changed later)", out string libName);
 
                 Library newLib = new Library(
-                    name: Path.GetFileName(libPath.TrimEnd(Path.DirectorySeparatorChar)),
-                    dirpath: libPath
+                    name: libName,
+                    dirpath: libraryPath
                 );
 
                 appdata.Libraries.Add(newLib);

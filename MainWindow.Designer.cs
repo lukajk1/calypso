@@ -32,12 +32,16 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             menuStrip1 = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
-            newGalleryToolStripMenuItem = new ToolStripMenuItem();
+            addNewLibraryToolStripMenuItem = new ToolStripMenuItem();
             openExistingLibraryToolStripMenuItem = new ToolStripMenuItem();
             toolStripMenuItem8 = new ToolStripMenuItem();
+            toolStripMenuItem10 = new ToolStripMenuItem();
+            toolStripMenuItem6 = new ToolStripMenuItem();
+            toolStripMenuItem9 = new ToolStripMenuItem();
             toolStripMenuItem7 = new ToolStripMenuItem();
             toolStripMenuItem1 = new ToolStripMenuItem();
             exitToolStripMenuItem = new ToolStripMenuItem();
+            switchLibraryToolStripMenuItem = new ToolStripMenuItem();
             viewToolStripMenuItem = new ToolStripMenuItem();
             toolStripMenuItem2 = new ToolStripMenuItem();
             toolStripMenuItem5 = new ToolStripMenuItem();
@@ -72,8 +76,8 @@
             pictureBoxImagePreview = new PictureBox();
             middleFillPanelContainer = new Panel();
             tagTreeGallerySplitContainer = new SplitContainer();
+            addTagButton = new Button();
             horizontalLeftSplitContainer = new SplitContainer();
-            savedSearchesTreeView = new TreeView();
             imageInfoHorizontalSplitContainer = new SplitContainer();
             imageMetadataPanel = new Panel();
             masterSplitContainer = new SplitContainer();
@@ -82,7 +86,6 @@
             removeTagToolStripMenuItem = new ToolStripMenuItem();
             addChildTagToolStripMenuItem = new ToolStripMenuItem();
             deleteToolStripMenuItem = new ToolStripMenuItem();
-            addTagButton = new Button();
             menuStrip1.SuspendLayout();
             statusStrip1.SuspendLayout();
             imageContextMenuStrip.SuspendLayout();
@@ -94,8 +97,6 @@
             tagTreeGallerySplitContainer.Panel2.SuspendLayout();
             tagTreeGallerySplitContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)horizontalLeftSplitContainer).BeginInit();
-            horizontalLeftSplitContainer.Panel1.SuspendLayout();
-            horizontalLeftSplitContainer.Panel2.SuspendLayout();
             horizontalLeftSplitContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)imageInfoHorizontalSplitContainer).BeginInit();
             imageInfoHorizontalSplitContainer.Panel1.SuspendLayout();
@@ -121,38 +122,57 @@
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newGalleryToolStripMenuItem, openExistingLibraryToolStripMenuItem, toolStripMenuItem1, exitToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addNewLibraryToolStripMenuItem, openExistingLibraryToolStripMenuItem, toolStripMenuItem1, exitToolStripMenuItem, switchLibraryToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new Size(37, 20);
             fileToolStripMenuItem.Text = "&File";
             // 
-            // newGalleryToolStripMenuItem
+            // addNewLibraryToolStripMenuItem
             // 
-            newGalleryToolStripMenuItem.Name = "newGalleryToolStripMenuItem";
-            newGalleryToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl + N";
-            newGalleryToolStripMenuItem.Size = new Size(288, 22);
-            newGalleryToolStripMenuItem.Text = "&Add New Library...";
-            newGalleryToolStripMenuItem.Click += newGalleryToolStripMenuItem_Click;
+            addNewLibraryToolStripMenuItem.Name = "addNewLibraryToolStripMenuItem";
+            addNewLibraryToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl + N";
+            addNewLibraryToolStripMenuItem.Size = new Size(288, 22);
+            addNewLibraryToolStripMenuItem.Text = "&Add New Library...";
+            addNewLibraryToolStripMenuItem.Click += newGalleryToolStripMenuItem_Click;
             // 
             // openExistingLibraryToolStripMenuItem
             // 
             openExistingLibraryToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem8, toolStripMenuItem7 });
             openExistingLibraryToolStripMenuItem.Name = "openExistingLibraryToolStripMenuItem";
-            openExistingLibraryToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl + O";
+            openExistingLibraryToolStripMenuItem.ShortcutKeyDisplayString = "";
             openExistingLibraryToolStripMenuItem.Size = new Size(288, 22);
-            openExistingLibraryToolStripMenuItem.Text = "&Open Library";
+            openExistingLibraryToolStripMenuItem.Text = "&Manage Libraries";
             // 
             // toolStripMenuItem8
             // 
+            toolStripMenuItem8.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem10, toolStripMenuItem6, toolStripMenuItem9 });
             toolStripMenuItem8.Enabled = false;
             toolStripMenuItem8.Name = "toolStripMenuItem8";
-            toolStripMenuItem8.Size = new Size(170, 22);
+            toolStripMenuItem8.Size = new Size(180, 22);
             toolStripMenuItem8.Text = "Library 1 (Current)";
+            // 
+            // toolStripMenuItem10
+            // 
+            toolStripMenuItem10.Name = "toolStripMenuItem10";
+            toolStripMenuItem10.Size = new Size(191, 22);
+            toolStripMenuItem10.Text = "Open";
+            // 
+            // toolStripMenuItem6
+            // 
+            toolStripMenuItem6.Name = "toolStripMenuItem6";
+            toolStripMenuItem6.Size = new Size(191, 22);
+            toolStripMenuItem6.Text = "Rename";
+            // 
+            // toolStripMenuItem9
+            // 
+            toolStripMenuItem9.Name = "toolStripMenuItem9";
+            toolStripMenuItem9.Size = new Size(191, 22);
+            toolStripMenuItem9.Text = "Remove from Calypso";
             // 
             // toolStripMenuItem7
             // 
             toolStripMenuItem7.Name = "toolStripMenuItem7";
-            toolStripMenuItem7.Size = new Size(170, 22);
+            toolStripMenuItem7.Size = new Size(180, 22);
             toolStripMenuItem7.Text = "Library 2";
             // 
             // toolStripMenuItem1
@@ -170,6 +190,12 @@
             exitToolStripMenuItem.Size = new Size(288, 22);
             exitToolStripMenuItem.Text = "E&xit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
+            // 
+            // switchLibraryToolStripMenuItem
+            // 
+            switchLibraryToolStripMenuItem.Name = "switchLibraryToolStripMenuItem";
+            switchLibraryToolStripMenuItem.Size = new Size(288, 22);
+            switchLibraryToolStripMenuItem.Text = "&Switch Library";
             // 
             // viewToolStripMenuItem
             // 
@@ -369,7 +395,7 @@
             tagTree.Dock = DockStyle.Fill;
             tagTree.Location = new Point(0, 0);
             tagTree.Name = "tagTree";
-            tagTree.Size = new Size(293, 389);
+            tagTree.Size = new Size(293, 792);
             tagTree.TabIndex = 10;
             // 
             // searchPanel
@@ -456,6 +482,8 @@
             // 
             // tagTreeGallerySplitContainer.Panel1
             // 
+            tagTreeGallerySplitContainer.Panel1.Controls.Add(tagTree);
+            tagTreeGallerySplitContainer.Panel1.Controls.Add(addTagButton);
             tagTreeGallerySplitContainer.Panel1.Controls.Add(horizontalLeftSplitContainer);
             // 
             // tagTreeGallerySplitContainer.Panel2
@@ -466,33 +494,26 @@
             tagTreeGallerySplitContainer.SplitterWidth = 7;
             tagTreeGallerySplitContainer.TabIndex = 17;
             // 
+            // addTagButton
+            // 
+            addTagButton.Dock = DockStyle.Bottom;
+            addTagButton.Location = new Point(0, 792);
+            addTagButton.Name = "addTagButton";
+            addTagButton.Size = new Size(293, 23);
+            addTagButton.TabIndex = 11;
+            addTagButton.Text = "+";
+            addTagButton.UseVisualStyleBackColor = true;
+            addTagButton.Click += addTagButton_Click;
+            // 
             // horizontalLeftSplitContainer
             // 
             horizontalLeftSplitContainer.Dock = DockStyle.Fill;
             horizontalLeftSplitContainer.Location = new Point(0, 0);
             horizontalLeftSplitContainer.Name = "horizontalLeftSplitContainer";
             horizontalLeftSplitContainer.Orientation = Orientation.Horizontal;
-            // 
-            // horizontalLeftSplitContainer.Panel1
-            // 
-            horizontalLeftSplitContainer.Panel1.Controls.Add(addTagButton);
-            horizontalLeftSplitContainer.Panel1.Controls.Add(tagTree);
-            // 
-            // horizontalLeftSplitContainer.Panel2
-            // 
-            horizontalLeftSplitContainer.Panel2.Controls.Add(savedSearchesTreeView);
             horizontalLeftSplitContainer.Size = new Size(293, 815);
             horizontalLeftSplitContainer.SplitterDistance = 389;
             horizontalLeftSplitContainer.TabIndex = 11;
-            // 
-            // savedSearchesTreeView
-            // 
-            savedSearchesTreeView.BackColor = SystemColors.ControlLight;
-            savedSearchesTreeView.Dock = DockStyle.Fill;
-            savedSearchesTreeView.Location = new Point(0, 0);
-            savedSearchesTreeView.Name = "savedSearchesTreeView";
-            savedSearchesTreeView.Size = new Size(293, 422);
-            savedSearchesTreeView.TabIndex = 11;
             // 
             // imageInfoHorizontalSplitContainer
             // 
@@ -579,17 +600,6 @@
             deleteToolStripMenuItem.Text = "Delete";
             deleteToolStripMenuItem.Click += deleteToolStripMenuItem_Click;
             // 
-            // addTagButton
-            // 
-            addTagButton.Dock = DockStyle.Bottom;
-            addTagButton.Location = new Point(0, 366);
-            addTagButton.Name = "addTagButton";
-            addTagButton.Size = new Size(293, 23);
-            addTagButton.TabIndex = 11;
-            addTagButton.Text = "+";
-            addTagButton.UseVisualStyleBackColor = true;
-            addTagButton.Click += addTagButton_Click;
-            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -617,8 +627,6 @@
             tagTreeGallerySplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)tagTreeGallerySplitContainer).EndInit();
             tagTreeGallerySplitContainer.ResumeLayout(false);
-            horizontalLeftSplitContainer.Panel1.ResumeLayout(false);
-            horizontalLeftSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)horizontalLeftSplitContainer).EndInit();
             horizontalLeftSplitContainer.ResumeLayout(false);
             imageInfoHorizontalSplitContainer.Panel1.ResumeLayout(false);
@@ -664,7 +672,7 @@
         public Splitter splitterRight;
         public PictureBox pictureBoxImagePreview;
         public TableLayoutPanel tableLayoutImageInfo;
-        public ToolStripMenuItem newGalleryToolStripMenuItem;
+        public ToolStripMenuItem addNewLibraryToolStripMenuItem;
         public ToolStripMenuItem openExistingLibraryToolStripMenuItem;
         public ToolStripMenuItem toolStripMenuItem2;
         public ToolStripMenuItem toolStripMenuItem3;
@@ -677,7 +685,6 @@
         public SplitContainer imageInfoHorizontalSplitContainer;
         public SplitContainer masterSplitContainer;
         public SplitContainer horizontalLeftSplitContainer;
-        public TreeView savedSearchesTreeView;
         public Panel masterPanelWrapper;
         public Panel imageMetadataPanel;
         public ToolStripMenuItem toolStripMenuItem7;
@@ -692,5 +699,9 @@
         private ToolStripMenuItem tagToolStripMenuItem;
         private ToolStripMenuItem addNewTagToolStripMenuItem;
         private Button addTagButton;
+        private ToolStripMenuItem toolStripMenuItem6;
+        private ToolStripMenuItem toolStripMenuItem9;
+        private ToolStripMenuItem toolStripMenuItem10;
+        private ToolStripMenuItem switchLibraryToolStripMenuItem;
     }
 }

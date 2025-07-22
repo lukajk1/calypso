@@ -16,6 +16,7 @@ namespace Calypso
         public static MainWindow i;
         public static string MainWindowTitle = "Calypso";
         public static Pane FocusedPane;
+        public static bool initialized;
         public MainWindow()
         {
             CreateSingleton();
@@ -40,7 +41,8 @@ namespace Calypso
 
             DB.Init(this);
             new TagTreePanel(this);
-            Searchbar.Search("all");
+            LibraryUIManager.Init(this);
+            initialized = true;
         }
         private void CreateSingleton()
         {
@@ -195,7 +197,7 @@ namespace Calypso
                 {
                     if ((keyData & Keys.KeyCode) == (Keys)((int)Keys.D0 + i))
                     {
-                        DBManager.LoadLibrary(i);
+                        DB.LoadLibrary(i);
                         break;
                     }
                 }
