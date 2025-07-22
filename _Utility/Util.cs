@@ -13,6 +13,24 @@ namespace Calypso
 
     internal class Util
     {
+        public static bool TextPrompt(string message, out string output)
+        {
+            using (var prompt = new TextPrompt(MainWindow.i, message))
+            {
+                if (prompt.ShowDialog() == DialogResult.OK)
+                {
+                    output = prompt.ResultText;
+                    return true;
+                    //Debug.WriteLine("User entered: " + userInput);
+                }
+                else
+                {
+                    output = string.Empty;
+                    return false;
+                    //.WriteLine("User cancelled input.");
+                }
+            }
+        }
         public static void ShowErrorDialog(string message)
         {
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

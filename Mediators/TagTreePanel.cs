@@ -25,6 +25,10 @@ namespace Calypso
             i = this;
             this.mainW = mainW;
             tagTree = mainW.tagTree;
+            tagTree.BeforeCollapse += (s, e) =>
+            {
+                e.Cancel = true; // Prevent collapsing 
+            };
 
             Populate(DB.appdata.ActiveLibrary.tagTree, DB.appdata.ActiveLibrary.tagDict);
         }
@@ -51,11 +55,6 @@ namespace Calypso
 
             tagTree.ExpandAll(); 
             
-
-            tagTree.BeforeCollapse += (s, e) =>
-            {
-                e.Cancel = true; // Prevent collapsing 
-            };
         }
         public void GenerateTagTree(TagTreeRefactor tagTreeRefactor, Dictionary<string, List<ImageData>> tagDict)
         {
@@ -136,13 +135,13 @@ namespace Calypso
 
             if (e.Button == MouseButtons.Left)
             {
-                string tagName = selectedNode.Tag as string;
-
-                // Only handle clicks on tag nodes (nodes with Tag data)
-                if (tagName != null)
+                if (selectedNode.Tag is TagNode tagNode)
                 {
-                    //MessageBox.Show($"Clicked on tag: {tagName}");
-                    Searchbar.Search(tagName);
+                    Searchbar.Search(tagNode.Name);
+                }
+                else if (selectedNode.Tag is string value)
+                {
+                    Searchbar.Search(value);
                 }
             }
             else if (e.Button == MouseButtons.Right)
@@ -154,11 +153,12 @@ namespace Calypso
 
         public  void RenameTag(object sender)
         {
-            if (OpenTagTextPrompt(out string newName))
+            if (Util.TextPrompt("Set new tag name: ", out string newName))
             {
-                selectedNode.Text = newName;
-
-
+                if (selectedNode.Tag is TagNode tagNode)
+                {
+                    DB.appdata.ActiveLibrary.RenameTag(tagNode.Name, newName);
+                }
             }
 
         }
@@ -171,43 +171,25 @@ namespace Calypso
             }
             if (selectedNode.Tag is TagNode tn)
             {
-                Util.ShowInfoDialog("delete" + tn.Name);
-                DB.appdata.ActiveLibrary.RemoveTag(tn.Name);
+                //Util.ShowInfoDialog("delete" + tn.Name);
+                DB.appdata.ActiveLibrary.DeleteTagFromTree(tn.Name);
 
             }
         }
 
         public  void AddChildTag(object sender)
         {
-            string parentTag = selectedNode.Tag as string;
-
-            if (parentTag == null) return;
-
-            OpenTagTextPrompt(out string name);
-            DB.appdata.ActiveLibrary.AddTag(new TagNode(name, parentTag));
-        }
-
-        public static bool OpenTagTextPrompt(out string output)
-        {
-            using (var prompt = new TextPrompt(MainWindow.i, "Enter new tag name:"))
+            if (selectedNode.Tag is TagNode parentNode)
             {
-                if (prompt.ShowDialog() == DialogResult.OK)
+                if (Util.TextPrompt("Set tag name: ", out string name))
                 {
-                    output = prompt.ResultText;
-                    return true;
-                    //Debug.WriteLine("User entered: " + userInput);
-                }
-                else
-                {
-                    output = string.Empty; 
-                    return false;
-                    //.WriteLine("User cancelled input.");
+                    //Util.ShowInfoDialog($"parentnode depth : {parentNode.Depth}");
+                    var newTag = new TagNode(name, parentNode.Name, parentNode.Depth + 1);
+                    //Util.ShowInfoDialog($"newtag depth : {newTag.Depth}");
+
+                    DB.appdata.ActiveLibrary.AddTagToTree(newTag);
                 }
             }
-        }
-
-        public void PromptAddTag()
-        {
         }
     }
 }

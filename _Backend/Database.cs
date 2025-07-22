@@ -53,8 +53,10 @@ namespace Calypso
 
             if (PromptUserForLibrary("No existing library was found. Specify a folder now?", out libraryPath))
             {
+                if (!Util.TextPrompt("Set library name: ", out string libraryName)) return null;
+
                 Library newLib = new(
-                    name: Path.GetFileName(libraryPath.TrimEnd(Path.DirectorySeparatorChar)),
+                    name: libraryName,
                     dirpath: libraryPath
                 );
 

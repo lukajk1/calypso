@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -14,54 +15,47 @@ namespace Calypso
         #region searching
         public static void Search(string searchTextRaw, bool randomize, int upperLimit)
         {
-        //    if (ActiveTagTree == null) return;
+            List<ImageData> results = new();
+            string[] tagsInclude = { };
+            string[] tagsExclude = { };
 
-        //    List<ImageData> results = new();
-        //    string[] tagsInclude = { };
-        //    string[] tagsExclude = { };
+            string stripped = new string(searchTextRaw.Where(c => !char.IsWhiteSpace(c)).ToArray());
+            stripped = stripped.ToLower();
+            if (stripped == "randtag" || stripped == "rtag" || stripped == "randomtag")
+            {
+                // implement later..
+            }
+            else
+            {
+                if (appdata.ActiveLibrary.tagDict.ContainsKey(stripped))
+                {
+                    results = appdata.ActiveLibrary.tagDict[stripped];
 
-        //    string stripped = new string(searchTextRaw.Where(c => !char.IsWhiteSpace(c)).ToArray());
-        //    stripped = stripped.ToLower();
+                    List<TagNode> children = appdata.ActiveLibrary.tagTree.GetAllChildren(stripped);
+                    Debug.WriteLine("children count" + children.Count);
 
-        //    if (stripped == "randtag" || stripped == "rtag" || stripped == "randomtag")
-        //    {
-        //        var random = new Random();
+                    foreach (TagNode child in children)
+                    {
+                        if (appdata.ActiveLibrary.tagDict.TryGetValue(child.Name, out var imgs))
+                            results.AddRange(imgs);
+                    }
 
-        //        if (!(ActiveTagTree.TagDict.Count < 3)) // all tagdicts have 2 elements by default, all and untagged
-        //        {
-        //            return;
-        //        }
-        //        else
-        //        {
-        //            // implement eventually maybe
-        //            return;
-        //        }
+                    results = results.Distinct().ToList();
+                }
+            }
 
-        //    }
-        //    else
-        //    {
-        //        foreach (var kvp in ActiveTagTree.TagDict)
-        //        {
-        //            if (kvp.Key.Name == stripped)
-        //            {
-        //                results = kvp.Value;
-        //                break;
-        //            }
-        //        }
-        //    }
+            if (randomize)
+            {
+                var rng = new Random();
+                results = results.OrderBy(_ => rng.Next()).ToList();
+            }
 
-        //    if (randomize)
-        //    {
-        //        var rng = new Random();
-        //        results = results.OrderBy(_ => rng.Next()).ToList();
-        //    }
+            if (upperLimit > 0 && upperLimit < results.Count)
+            {
+                results = results.Take(upperLimit).ToList();
+            }
 
-        //    if (upperLimit > 0 && upperLimit < results.Count)
-        //    {
-        //        results = results.Take(upperLimit).ToList();
-        //    }
-
-        //    Gallery.Populate(results);
+            Gallery.Populate(results);
         }
         public static void ParseQuery(string input, out string[] tagInclude, out string[] tagExclude)
         {
@@ -136,8 +130,6 @@ namespace Calypso
                 Debug.WriteLine($"Failed to save appdata: {ex.Message}");
             }
         }
-
-
         private static bool Load()
         {
             try

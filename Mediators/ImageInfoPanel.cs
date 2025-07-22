@@ -23,6 +23,7 @@ namespace Calypso
         static Label labelFilename;
         static Label labelFilesize;
 
+        static ImageData displayedImage;
 
         public static void Init(MainWindow mainW)
         {
@@ -47,8 +48,15 @@ namespace Calypso
             // references, so each must be set to invidually
             labelFilename = new Label { Text = "--" };
             labelDimensions = new Label { Text = "--" }; 
-            labelTags = new Label { Text = "--" }; 
             labelFilesize  = new Label { Text = "--" };
+
+            labelTags = new Label { Text = "--" };
+            labelTags.AutoSize = false;
+            labelTags.Dock = DockStyle.Fill;
+            labelTags.TextAlign = ContentAlignment.TopLeft;
+            labelTags.MaximumSize = new Size(0, 0);
+            labelTags.Height = 100;
+
 
             tableLayoutImageInfo.Controls.Add(new Label { Text = "File Name" }, 0, 0);
             tableLayoutImageInfo.Controls.Add(labelFilename, 1, 0);
@@ -70,6 +78,7 @@ namespace Calypso
         }
         public static void Display(ImageData imgData)
         {
+            displayedImage = imgData;
             if (!Path.Exists(imgData.Filepath))
             {
                 Util.ShowErrorDialog("Error loading image.");
@@ -87,7 +96,10 @@ namespace Calypso
 
 
         }
-
+        public static void Refresh()
+        {
+            Display(displayedImage);
+        }
         private static void SetTableInfo(ImageData imgData, Image img)
         {
             if (imgData.Tags.Count > 0) labelTags.Text = string.Join(", ", imgData.Tags);

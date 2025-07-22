@@ -107,7 +107,7 @@
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "TextPrompt";
-            Text = "Tag Editor";
+            Text = "Prompt";
             panel1.ResumeLayout(false);
             panel2.ResumeLayout(false);
             panel2.PerformLayout();

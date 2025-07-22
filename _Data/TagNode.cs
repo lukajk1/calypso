@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Calypso
 {
-    public struct TagNode
+    public class TagNode
     {
         public int Depth {  get; set; }
         public string Parent { get; set; }

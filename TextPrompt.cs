@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Calypso
 {
@@ -13,10 +14,19 @@ namespace Calypso
 
             this.StartPosition = FormStartPosition.CenterParent;
             this.ShowIcon = false;
+            this.AcceptButton = buttonOK;
+
             label1.Text = message;
 
             buttonOK.Click += buttonOK_Click;
             buttonCancel.Click += buttonCancel_Click;
+        }
+        
+        protected override void OnShown(EventArgs e) // overrides onshown event to set some values only after the window has finished initializing
+        {
+            base.OnShown(e);
+            newTagTextBox.Focus();
+            newTagTextBox.SelectionStart = 0;
         }
 
         private void buttonOK_Click(object sender, EventArgs e)

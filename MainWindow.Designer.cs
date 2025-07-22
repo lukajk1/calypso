@@ -82,6 +82,7 @@
             removeTagToolStripMenuItem = new ToolStripMenuItem();
             addChildTagToolStripMenuItem = new ToolStripMenuItem();
             deleteToolStripMenuItem = new ToolStripMenuItem();
+            addTagButton = new Button();
             menuStrip1.SuspendLayout();
             statusStrip1.SuspendLayout();
             imageContextMenuStrip.SuspendLayout();
@@ -474,6 +475,7 @@
             // 
             // horizontalLeftSplitContainer.Panel1
             // 
+            horizontalLeftSplitContainer.Panel1.Controls.Add(addTagButton);
             horizontalLeftSplitContainer.Panel1.Controls.Add(tagTree);
             // 
             // horizontalLeftSplitContainer.Panel2
@@ -577,6 +579,17 @@
             deleteToolStripMenuItem.Text = "Delete";
             deleteToolStripMenuItem.Click += deleteToolStripMenuItem_Click;
             // 
+            // addTagButton
+            // 
+            addTagButton.Dock = DockStyle.Bottom;
+            addTagButton.Location = new Point(0, 366);
+            addTagButton.Name = "addTagButton";
+            addTagButton.Size = new Size(293, 23);
+            addTagButton.TabIndex = 11;
+            addTagButton.Text = "+";
+            addTagButton.UseVisualStyleBackColor = true;
+            addTagButton.Click += addTagButton_Click;
+            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -678,5 +691,6 @@
         private ToolStripMenuItem addChildTagToolStripMenuItem;
         private ToolStripMenuItem tagToolStripMenuItem;
         private ToolStripMenuItem addNewTagToolStripMenuItem;
+        private Button addTagButton;
     }
 }

@@ -13,7 +13,7 @@ namespace Calypso
     }
     public partial class MainWindow : Form
     {
-        public static MainWindow i; 
+        public static MainWindow i;
         public static string MainWindowTitle = "Calypso";
         public static Pane FocusedPane;
         public MainWindow()
@@ -40,14 +40,7 @@ namespace Calypso
 
             DB.Init(this);
             new TagTreePanel(this);
-                //TreesPanel.Populate(DB.ActiveTagTree);
-            //if (DB.Init(this))
-            //{
-            //    TreesPanel.Init(this);
-            //    //TreesPanel.Populate(DB.ActiveTagTree);
-            //}
-
-
+            Searchbar.Search("all");
         }
         private void CreateSingleton()
         {
@@ -159,11 +152,17 @@ namespace Calypso
                 return true;
             }
 
+            else if (keyData == (Keys.Control | Keys.K))
+            {
+                DB.appdata.ActiveLibrary.FlushTagDictDuplicates();
+                return true;
+            }
+
             else if (keyData == (Keys.Control | Keys.T))
             {
-                if (TagTreePanel.OpenTagTextPrompt(out string newTag))
+                if (Util.TextPrompt("Set tag name: ", out string newTag))
                 {
-                    DB.appdata.ActiveLibrary.AddTag(new TagNode(newTag));
+                    DB.appdata.ActiveLibrary.AddTagToTree(new TagNode(newTag));
                 }
                 return true;
             }
@@ -335,7 +334,18 @@ namespace Calypso
 
         private void addNewTagToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            TagTreePanel.i.PromptAddTag();
+            if (Util.TextPrompt("Set tag name: ", out string newTag))
+            {
+                DB.appdata.ActiveLibrary.AddTagToTree(new TagNode(newTag));
+            }
+        }
+
+        private void addTagButton_Click(object sender, EventArgs e)
+        {
+            if (Util.TextPrompt("Set tag name: ", out string newTag))
+            {
+                DB.appdata.ActiveLibrary.AddTagToTree(new TagNode(newTag));
+            }
         }
     }
 }

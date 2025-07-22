@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -14,11 +15,10 @@ namespace Calypso
     public partial class TagEditor : Form
     {
         private MainWindow? mainW;
-        private ImageData currentImageData;
-        Dictionary<string, int> TagCountInSelection = new();
         List<TileTag> selection = new();
-        List<string> tagsUnchecked = new();
-        List<string> multipleSelectionTagsChecked = new();
+        private ImageData currentImageData;
+        private List<string> commonTags = new();
+
         public TagEditor(MainWindow mainW)
         {
             this.mainW = mainW;
@@ -34,18 +34,23 @@ namespace Calypso
             this.KeyDown += TagEditor_KeyDown; 
             this.ShowIcon = false;
 
-            buttonAddTag.Click += AddTagEvent;
-            newTagTextBox.KeyDown += (s, e) =>
+            // treeview config
+            tagEditorTree.CheckBoxes = true;
+            tagEditorTree.BeforeSelect += (s, e) =>
             {
-                if (e.KeyCode == Keys.Enter)
+                if (e.Node.Tag is string tag && tag == "unselectable")
+                    e.Cancel = true;
+            };
+            tagEditorTree.BeforeCollapse += (s, e) => e.Cancel = true;
+            tagEditorTree.NodeMouseClick += (s, e) =>
+            {
+                if (e.Button == MouseButtons.Left)
                 {
-                    AddTagEvent(s, e);
-                    e.SuppressKeyPress = true; // prevent beep
+                    e.Node.Checked = !e.Node.Checked;
                 }
             };
 
-            checkedListBoxTags.CheckOnClick = true; 
-            checkedListBoxTags.KeyDown += checkedListBoxTags_KeyDown;
+
 
             this.FormClosing += (s, e) =>
             {
@@ -56,107 +61,133 @@ namespace Calypso
 
         public void Populate(List<TileTag> selection)
         {
-            //this.selection = selection;
-            //checkedListBoxTags.Items.Clear();
+            this.selection = selection;
 
-            //this.TagCountInSelection.Clear();
+            // get intersection of all tags on all tiletag objects. These are the ones that will be checked when displaying
+            commonTags = selection
+                .Select(t => t._ImageData.Tags)
+                .Aggregate((prev, next) => prev.Intersect(next).ToList());
 
-            //foreach (TileTag tTag in selection)
-            //{
-            //    foreach (string tag in tTag._ImageData.Tags)
-            //    {
-            //        if (TagCountInSelection.ContainsKey(tag))
-            //        {
-            //            TagCountInSelection[tag]++;
-            //        }
-            //        else
-            //        {
-            //            TagCountInSelection.Add(tag, 1);
-            //        }
-            //    }
-            //}
+            GenerateTagTree(DB.appdata.ActiveLibrary.tagTree, DB.appdata.ActiveLibrary.tagDict);
 
-            //tagsUnchecked.Clear();
-            //multipleSelectionTagsChecked.Clear();
+        }
+        public void GenerateTagTree(TagTreeRefactor tagTreeRefactor, Dictionary<string, List<ImageData>> tagDict)
+        {
+            tagEditorTree.BeginUpdate();
+            tagEditorTree.Nodes.Clear();
 
-            //foreach (var kvp in TagCountInSelection)
-            //{
-            //    bool isChecked = (kvp.Value == selection.Count);
+            foreach (TagNode node in tagTreeRefactor.tagNodes)
+            {
+                int num;
+                if (tagDict.ContainsKey(node.Name))
+                {
+                    num = tagDict[node.Name].Count;
+                }
+                else
+                {
+                    continue;
+                }
 
-            //    if (isChecked)
-            //    {
-            //        multipleSelectionTagsChecked.Add(kvp.Key);
-            //    }
+                AddToTree(node, num);
+            }
 
-            //    checkedListBoxTags.Items.Add($"# {kvp.Key} ({kvp.Value})", isChecked);
-
-            //}
-
-            //// add tags not in selection
-            //foreach (var kvp in DB.TagDict)
-            //{
-            //    if (!TagCountInSelection.ContainsKey(kvp.Key))
-            //        checkedListBoxTags.Items.Add("#" + kvp.Key, false);
-            //}
+            tagEditorTree.ExpandAll();
+            tagEditorTree.EndUpdate();
         }
 
-        // handle tag deletion
-        private void checkedListBoxTags_KeyDown(object sender, KeyEventArgs e)
+        private void AddToTree(TagNode node, int contentCount)
         {
-            if (e.KeyCode == Keys.Delete && checkedListBoxTags.SelectedItem != null)
+            string displayText = $"#{node.Name}";
+            bool isChecked = commonTags.Contains(node.Name);
+
+            TreeNode newTreeNode = new TreeNode(displayText)
             {
-                string tag = checkedListBoxTags.SelectedItem.ToString();
-                if (tag != null && tag.StartsWith("#"))
-                    tag = tag.Substring(1);
+                Tag = node,
+                Checked = isChecked
+            };
 
-                checkedListBoxTags.Items.Remove(checkedListBoxTags.SelectedItem);
-
-                //DB.RemoveTag(tag);
-                DB.GenTagDictAndSaveLibrary();
-                e.Handled = true;
+            if (node.Parent != string.Empty)
+            {
+                foreach (TreeNode parent in GetNodes(tagEditorTree))
+                {
+                    if (parent.Tag is TagNode parentTagNode && parentTagNode.Name == node.Parent)
+                    {
+                        parent.Nodes.Add(newTreeNode);
+                        //Debug.WriteLine($"added {node.Name} to tree");
+                    }
+                }
+            }
+            else
+            {
+                tagEditorTree.Nodes.Add(newTreeNode);
+                //Debug.WriteLine($"added {node.Name} to tree");
             }
         }
-
-        private void AddTagEvent(object sender, EventArgs e)
+        private IEnumerable<TreeNode> GetNodes(TreeView treeView, bool onlyChecked = false)
         {
-            //string tag = newTagTextBox.Text;
-            //newTagTextBox.Clear();
+            foreach (TreeNode node in treeView.Nodes)
+                foreach (var child in GetNodes(node, onlyChecked))
+                    yield return child;
+        }
 
-            //tag = tag.Trim().ToLower().Replace(" ", "-");
-
-            //if (tag != string.Empty)
-            //{
-            //    if (DB.TagDict.ContainsKey(tag))
-            //    {
-            //        mainW.Activate();
-            //        mainW.Focus();
-
-            //        Util.ShowErrorDialog("Tag already exists!");
-            //    }
-            //    else
-            //    {
-            //        checkedListBoxTags.Items.Add("#" + tag, true);
-            //    }
-            //}
-
+        private IEnumerable<TreeNode> GetNodes(TreeNode parent, bool onlyChecked = false)
+        {
+            if (!onlyChecked || parent.Checked)
+                yield return parent;
+            foreach (TreeNode child in parent.Nodes)
+                foreach (var descendant in GetNodes(child, onlyChecked))
+                    yield return descendant;
         }
 
         private void OnLossOfFocus(object sender, EventArgs e)
         {
-            List<string> checkedTags = checkedListBoxTags.CheckedItems
-                .Cast<string>()
-                .Select(s => s.StartsWith("#") ? s.Substring(1) : s)
-                .Select(s => s.TrimEnd().Split(' ')[0])
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .ToList();
+            List<string> tagsToAdd = new();
+            foreach (TreeNode node in GetNodes(tagEditorTree, true))
+            {
+                if (node.Tag is TagNode tagNode)
+                {
+                    tagsToAdd.Add(tagNode.Name);
+                }
+            }
 
-            //foreach (TileTag tTag in selection)
-            //{
-            //    tTag._ImageData.AddTags(checkedTags);
-            //}
+            // remove all tags from all images that are not in tagsToAdd
+            List<string> toRemove = new();
+            foreach (TileTag tTag in selection)
+            {
+                foreach (string tag in tTag._ImageData.Tags)
+                {
+                    if (!tagsToAdd.Contains(tag))
+                    {
+                        //Debug.WriteLine(tag + "is not contained in tags to add.. removing..");
+                        toRemove.Add(tag);
+                    }
+                }
+
+                // remove tags from imagedata
+                foreach (string tag in toRemove)
+                {
+                    DB.appdata.ActiveLibrary.UntagImage(tag, tTag._ImageData);
+                }
+            }
+
+
+            //Debug.WriteLine("should only be preserving" + tagsToAdd.Count + "tags");
+
+            // grab imagelist from selection
+            List<ImageData> images = new();
+            foreach (var tTag in selection)
+            {
+                images.Add(tTag._ImageData);
+            }
+
+            // tag images with each tag from checkedtags
+            foreach (string tag in tagsToAdd)
+            {
+                DB.appdata.ActiveLibrary.TagImages(tag, images);
+            }
 
             DB.GenTagDictAndSaveLibrary();
-
+            ImageInfoPanel.Refresh(); // nonessential dependency, just QOL to refresh and show the new tags
             this.CloseForm();
         }
         private void TagEditor_KeyDown(object sender, KeyEventArgs e)
